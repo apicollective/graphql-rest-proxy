@@ -1,0 +1,79 @@
+{
+  "enums": {
+    "image_tag": {
+      "values": [
+        { "name": "thumbnail", "description": "Thumbnail images identify the image to use when displaying products in the Flow Console."},
+        { "name": "checkout", "description": "Checkout images identify the item image to use when displaying the item in the context of a consumer checkout (e.g. cart, checkout page)." }
+      ]
+    },
+    "unit_of_measurement": {
+      "description": "Defines the units of measurement that we support. As units are added, we conform with the standard units provided by jscience as part of JSR 363 - see http://jscience.org/api/javax/measure/unit/SI.html and http://jscience.org/api/javax/measure/unit/NonSI.html",
+      "values": [
+        { "name": "millimeter", "description": "Equivalent to MILLI(METRE)." },
+        { "name": "centimeter", "description": "Equivalent to CENTI(METRE)." },
+        { "name": "inch", "description": "A unit of length equal to 0.01004 m (standard name in)." },
+        { "name": "foot", "description": "A unit of length equal to 0.3048 m (standard name ft)." },
+        { "name": "cubic_inch", "description": "A unit of volume equal to one cubic inch (in³)." },
+        { "name": "cubic_meter", "description": "The metric unit for volume quantities (m³)." },
+        { "name": "gram", "description": "A unit of mass equal to 1 / 1000 kilogram (standard name g)." },
+        { "name": "kilogram", "description": "The base unit for mass quantities (kg)." },
+        { "name": "meter", "description": "The base unit for length quantities (m)." },
+        { "name": "ounce", "description": "A unit of mass equal to 1 / 16 POUND (standard name oz)." },
+        { "name": "pound", "description": "A unit of mass equal to 453.59237 grams (avoirdupois pound, standard name lb)." }
+      ]
+    }
+  },
+  "models": {
+    "item": {
+      "description": "The Flow item defines a specific item that can be purchased by a consumer. For many clients, this will map to a Sku.",
+      "fields": [
+        { "name": "id", "type": "string" },
+        { "name": "number", "type": "string" },
+        { "name": "locale", "type": "string", "example": "en_US" },
+        { "name": "name", "type": "string" },
+        { "name": "price", "type": "io.flow.common.v0.models.price" },
+        { "name": "categories", "type": "[string]", "default": [] },
+        { "name": "description", "type": "string", "required": false },
+        { "name": "attributes", "type": "map[string]", "default": {}, "description": "Attributes of the items. An attribute of type intent must be given as a string representation of a decimal to be correctly localized." },
+        { "name": "dimensions", "type": "io.flow.common.v0.models.dimensions" },
+        { "name": "images", "type": "[image]", "default": [] }
+      ]
+    },
+    "price": {
+      "description": "Represents an amount-currency pair for a basic price",
+      "fields": [
+        { "name": "amount", "type": "double" },
+        { "name": "currency", "type": "string", "description": "ISO 4217 3 currency code as defined in https://api.flow.io/reference/currencies", "example": "CAD" },
+        { "name": "label", "type": "string" }
+      ]
+    },
+    "dimensions": {
+      "fields": [
+        { "name": "product", "type": "dimension", "required": false },
+        { "name": "packaging", "type": "dimension", "required": false }
+      ]
+    },
+    "dimension": {
+      "fields": [
+        { "name": "depth", "type": "measurement", "required": false },
+        { "name": "diameter", "type": "measurement", "required": false },
+        { "name": "length", "type": "measurement", "required": false },
+        { "name": "weight", "type": "measurement", "required": false },
+        { "name": "width", "type": "measurement", "required": false }
+      ]
+    },
+    "measurement": {
+      "fields": [
+        { "name": "value", "type": "string", "example": "12.23" },
+        { "name": "units", "type": "unit_of_measurement", "example": "inch" }
+      ]
+    },
+    "image": {
+      "description": "The URL to an image, with optional tags. Flow Commerce primarily uses images to enhance the administrative tools (e.g. showing an item image in console)",
+      "fields": [
+        { "name": "url", "type": "string", "description": "The full URL to the image", "example": "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png" },
+        { "name": "tags", "type": "[image_tag]", "default": [], "description": "Tags can be used to identify the type of image being sent" }
+      ]
+    }
+  }
+}
