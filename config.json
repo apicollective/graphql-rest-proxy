@@ -31,11 +31,11 @@
         { "name": "number", "type": "string" },
         { "name": "locale", "type": "string", "example": "en_US" },
         { "name": "name", "type": "string" },
-        { "name": "price", "type": "io.flow.common.v0.models.price" },
+        { "name": "price", "type": "price" },
         { "name": "categories", "type": "[string]", "default": [] },
         { "name": "description", "type": "string", "required": false },
         { "name": "attributes", "type": "map[string]", "default": {}, "description": "Attributes of the items. An attribute of type intent must be given as a string representation of a decimal to be correctly localized." },
-        { "name": "dimensions", "type": "io.flow.common.v0.models.dimensions" },
+        { "name": "dimensions", "type": "dimensions" },
         { "name": "images", "type": "[image]", "default": [] }
       ]
     },
@@ -74,6 +74,33 @@
         { "name": "url", "type": "string", "description": "The full URL to the image", "example": "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png" },
         { "name": "tags", "type": "[image_tag]", "default": [], "description": "Tags can be used to identify the type of image being sent" }
       ]
+    }
+  },
+  "resources": {
+    "item": {
+      "many": {
+        "path": "/:organization/catalog/items",
+        "params": {
+          "id": {
+            "type": "[string]",
+            "required": false
+          },
+          "number": {
+            "type": "[string]",
+            "required": false
+          },
+          "limit": {
+            "type": "number",
+            "required": true,
+            "default": 25
+          },
+          "offset": {
+            "type": "number",
+            "required": true,
+            "default": 0
+          }
+        }
+      }
     }
   }
 }
