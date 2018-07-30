@@ -1,4 +1,5 @@
 {
+  "base_url": "https://api.flow.io",
   "enums": {
     "image_tag": {
       "values": [

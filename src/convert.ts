@@ -1,6 +1,6 @@
-import got from 'got'
+import got, { GotError } from 'got'
 import {
-  getNamedType,
+  GraphQLEnumType,
   GraphQLFieldConfigArgumentMap,
   GraphQLFieldConfigMap,
   GraphQLFloat,
@@ -12,12 +12,10 @@ import {
   GraphQLSchema,
   GraphQLString,
   GraphQLType,
-  isListType,
   isNamedType,
   isNonNullType,
-  isOutputType,
   isNullableType,
-  GraphQLEnumType
+  isOutputType
 } from 'graphql'
 import _ from 'lodash'
 import { omit } from 'lodash/fp'
@@ -179,8 +177,56 @@ export function convert (config: IConfig): GraphQLSchema {
           })
           .pickBy((x) => x != null) // filter out args that errored
           .value() as GraphQLFieldConfigArgumentMap,
-        resolve: (source, args, context, info) => {
-          // got()
+        resolve: async (source, args, context, info) => {
+          const parts = resource.many.path.split('/')
+          const filled = parts.map((part) => {
+            if (part[0] === ':') {
+              return args[part.substring(1)]
+            } else {
+              return part
+            }
+          }).join('/')
+
+          const query: {[key: string]: any} = {}
+
+          for (const [key, param] of Object.entries(resource.many.params)) {
+            if (param.required && param.default != null && args[key] == null) {
+              throw new Error(`missing required param ${key}`)
+            }
+            if (args[key] != null) {
+              query[key] = args[key]
+            }
+          }
+
+          console.log(`GET ${config.base_url}${filled}?${Object.entries(query).map(([k, v]) => `${k}=${v}`).join('&')}`)
+
+          try {
+            const response = await got(`${config.base_url}${filled}`, {
+              query,
+              headers: {
+                authorization: context.authorization
+              }
+            })
+            const data = JSON.parse(response.body)
+            console.log(data)
+            if (!Array.isArray(data)) {
+              throw new Error('did not receive an array')
+            }
+            if (data.length === 0) {
+              throw new Error('no such object')
+            }
+            if (data.length > 1) {
+              throw new Error('received more than 1 object')
+            }
+            return data[0]
+          } catch (e) {
+            if ('response' in e) {
+              const err: GotError = e
+              throw new Error(err.response.body)
+            } else {
+              throw e
+            }
+          }
         }
       }
     } else {

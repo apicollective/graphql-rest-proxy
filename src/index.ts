@@ -1,4 +1,5 @@
 import { ApolloServer } from 'apollo-server'
+import { Request } from 'express'
 import fs from 'fs'
 import { convert } from './convert'
 import { IConfig } from './util/types'
@@ -13,7 +14,10 @@ if (!configFn) {
 const config = JSON.parse(fs.readFileSync(configFn).toString()) as IConfig
 
 const server = new ApolloServer({
-  schema: convert(config)
+  schema: convert(config),
+  context: ({ req }: { req: Request }) => ({
+    authorization: req.headers.authorization
+  })
 })
 
 server.listen().then(({ url }) => {
