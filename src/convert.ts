@@ -201,7 +201,8 @@ export function convert (config: IConfig): GraphQLSchema {
             _.every(index, (field) => args[field] != null))
 
           if (!unique) {
-            throw new Error(`not fetching a unique item. please fill out ${resource.many.uid.map(x => `[${x.join(',')}]`).join(', or ')}`)
+            throw new Error('not fetching a unique item. please fill out ' +
+                            resource.many.uid.map((fields) => `[${fields.join(',')}]`).join(', or '))
           }
 
           console.log(`GET ${config.base_url}${filled}?${Object.entries(query).map(([k, v]) => `${k}=${v}`).join('&')}`)
@@ -217,9 +218,6 @@ export function convert (config: IConfig): GraphQLSchema {
             console.log(data)
             if (!Array.isArray(data)) {
               throw new Error('did not receive an array')
-            }
-            if (data.length === 0) {
-              throw new Error('no such object')
             }
             if (data.length > 1) {
               throw new Error('received more than 1 object')

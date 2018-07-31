@@ -75,6 +75,17 @@
         { "name": "url", "type": "string", "description": "The full URL to the image", "example": "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png" },
         { "name": "tags", "type": "[image_tag]", "default": [], "description": "Tags can be used to identify the type of image being sent" }
       ]
+    },
+    "item_harmonization": {
+      "description": "Everything we know about an item's harmonization.",
+      "fields": [
+        { "name": "organization_id", "type": "string" },
+        { "name": "item_number", "type": "string" },
+        { "name": "phrase_id", "type": "string", "required": false },
+        { "name": "customs_description", "type": "string", "required": false },
+        { "name": "countries_of_origin", "type": "[string]", "description": "Country code iso31663", "required": false },
+        { "name": "hs6", "type": "string", "required": false }
+      ]
     }
   },
   "resources": {
@@ -103,6 +114,28 @@
             "type": "number",
             "required": true,
             "default": 0
+          }
+        },
+        "links": {
+          "item_harmonization": {
+            "params": {
+              "organization": "context",
+              "number": "context"
+            }
+          }
+        }
+      }
+    },
+    "item_harmonization": {
+      "many": {
+        "path": "/:organization/harmonization/results/items",
+        "uid": [
+          ["organization", "number"]
+        ],
+        "params": {
+          "number": {
+            "type": "[string]",
+            "required": false
           }
         }
       }
