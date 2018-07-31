@@ -42,6 +42,7 @@ interface IResource {
 
 interface IGetter {
   path: string
+  uid: string[][]
   params: {
     [key: string]: {
       type: string

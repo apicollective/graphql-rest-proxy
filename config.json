@@ -81,6 +81,10 @@
     "item": {
       "many": {
         "path": "/:organization/catalog/items",
+        "uid": [
+          ["organization", "number"],
+          ["id"]
+        ],
         "params": {
           "id": {
             "type": "[string]",

@@ -48,8 +48,7 @@ export function convert (config: IConfig): GraphQLSchema {
       return `Nullable${getMapEntryName(type.ofType)}`
     }
 
-    // isListType
-    return `ListOf${getMapEntryName(type.ofType)}`
+    return `ListOf${getMapEntryName((type as GraphQLList<any>).ofType)}`
   }
 
   const mapEntryCache = new Map<string, GraphQLObjectType>()
@@ -196,6 +195,13 @@ export function convert (config: IConfig): GraphQLSchema {
             if (args[key] != null) {
               query[key] = args[key]
             }
+          }
+
+          const unique = _.some(resource.many.uid, (index) =>
+            _.every(index, (field) => args[field] != null))
+
+          if (!unique) {
+            throw new Error(`not fetching a unique item. please fill out ${resource.many.uid.map(x => `[${x.join(',')}]`).join(', or ')}`)
           }
 
           console.log(`GET ${config.base_url}${filled}?${Object.entries(query).map(([k, v]) => `${k}=${v}`).join('&')}`)
