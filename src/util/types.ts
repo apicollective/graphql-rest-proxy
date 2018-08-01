@@ -13,8 +13,11 @@ export interface IConfig {
 
 interface IModel {
   name: string
-  description: string
+  description?: string
   fields: IField[]
+  links?: {
+    [type: string]: ILink
+  }
 }
 
 interface IField {
@@ -36,8 +39,21 @@ interface IEnumValue {
 }
 
 interface IResource {
-  one: IGetter
-  many: IGetter
+  one?: IGetter
+  many: IGetter // TODO: optional
+}
+
+type Source = 'context' | 'parent' | 'args'
+
+interface ILink {
+  params: {
+    [key: string]:
+    | Source
+    | {
+      type: string
+      source: Source
+    }
+  }
 }
 
 interface IGetter {

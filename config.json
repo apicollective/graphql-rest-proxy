@@ -38,7 +38,15 @@
         { "name": "attributes", "type": "map[string]", "default": {}, "description": "Attributes of the items. An attribute of type intent must be given as a string representation of a decimal to be correctly localized." },
         { "name": "dimensions", "type": "dimensions" },
         { "name": "images", "type": "[image]", "default": [] }
-      ]
+      ],
+      "links": {
+        "item_harmonization": {
+          "params": {
+            "organization": "context",
+            "number": "context"
+          }
+        }
+      }
     },
     "price": {
       "description": "Represents an amount-currency pair for a basic price",
@@ -114,14 +122,6 @@
             "type": "number",
             "required": true,
             "default": 0
-          }
-        },
-        "links": {
-          "item_harmonization": {
-            "params": {
-              "organization": "context",
-              "number": "context"
-            }
           }
         }
       }

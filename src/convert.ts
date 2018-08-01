@@ -15,11 +15,12 @@ import {
   isNamedType,
   isNonNullType,
   isNullableType,
-  isOutputType
+  isOutputType,
+  isInputType
 } from 'graphql'
 import _ from 'lodash'
 import { omit } from 'lodash/fp'
-import { AstNode, astFromTypeName } from './util/ast'
+import { astFromTypeName, AstNode } from './util/ast'
 import { IConfig } from './util/types'
 
 /**
@@ -78,7 +79,7 @@ export function convert (config: IConfig): GraphQLSchema {
     switch (node.name) {
       case 'array': {
         const child = toGraphQLType(node.type)
-        if (child && isNullableType(child)) {
+        if (child != null && isNullableType(child)) {
           return new GraphQLList(new GraphQLNonNull(child))
         } else {
           console.error(node.type, 'is null or not a nullable type')
@@ -108,12 +109,46 @@ export function convert (config: IConfig): GraphQLSchema {
         const res: GraphQLFieldConfigMap<any, any> = {}
         for (const field of model.fields) {
           const type = toGraphQLType(astFromTypeName(field.type))
-          if (type && isOutputType(type)) {
+          if (type != null && isOutputType(type)) {
             res[field.name] = {
               type
             }
           } else {
             console.error(`error: no such type ${field.type}`)
+          }
+        }
+        if (model.links != null) {
+          for (const [typeName, link] of Object.entries(model.links)) {
+            const linkType = toGraphQLType(astFromTypeName(typeName))
+            if (linkType && isOutputType(linkType)) {
+              res[typeName] = {
+                type: linkType,
+                args: _.chain(link.params)
+                       .mapValues((param) => {
+                          if (typeof param === 'string') {
+                            return {
+                              type: 'string',
+                              source: param
+                            }
+                          }
+                          return param
+                       })
+                       .pickBy(_.matches({ source: 'args' }))
+                       .mapValues(({ type }) => {
+                         const argType = toGraphQLType(astFromTypeName(type))
+                         if (argType != null && isInputType(argType)) {
+                           return { type: argType }
+                         } else {
+                           console.error(`no such type ${type}`)
+                           return null
+                         }
+                       })
+                       .pickBy((value) => value != null)
+                       .value() as GraphQLFieldConfigArgumentMap
+              }
+            } else {
+              console.error(`error: no such type ${typeName}`)
+            }
           }
         }
         return res

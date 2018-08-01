@@ -4,7 +4,7 @@
   "scripts": {
     "dev:start": "nodemon",
     "build": "tsc",
-    "lint": "tslint -c tslint.json src/**/*.ts"
+    "lint": "tslint -c tslint.json 'src/**/*.ts'"
   },
   "dependencies": {
     "apollo-server": "^2.0.0",
