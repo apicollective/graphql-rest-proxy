@@ -88,7 +88,7 @@ export function convert (config: IConfig): GraphQLSchema {
       }
       case 'map': {
         const child = toGraphQLType(node.type)
-        if (child && isOutputType(child)) {
+        if (child != null && isOutputType(child)) {
           return new GraphQLList(new GraphQLNonNull(makeMapEntry(child)))
         } else {
           console.error(node.type, 'is null or not an output type')
@@ -211,7 +211,7 @@ export function convert (config: IConfig): GraphQLSchema {
           })
           .pickBy((x) => x != null) // filter out args that errored
           .value() as GraphQLFieldConfigArgumentMap,
-        resolve: async (source, args, context, info) => {
+        resolve: async (source, args, context) => {
           const parts = resource.many.path.split('/')
           const filled = parts.map((part) => {
             if (part[0] === ':') {

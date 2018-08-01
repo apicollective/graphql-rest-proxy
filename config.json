@@ -43,7 +43,7 @@
         "item_harmonization": {
           "params": {
             "organization": "context",
-            "number": "context"
+            "number": "parent"
           }
         }
       }
