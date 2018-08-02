@@ -12,11 +12,11 @@ import {
   GraphQLSchema,
   GraphQLString,
   GraphQLType,
+  isInputType,
   isNamedType,
   isNonNullType,
   isNullableType,
-  isOutputType,
-  isInputType
+  isOutputType
 } from 'graphql'
 import _ from 'lodash'
 import { omit } from 'lodash/fp'
@@ -32,6 +32,52 @@ function keysFromProp<T extends object, K extends keyof T> (objs: T[], key: K): 
   }
 } {
   return _.chain(objs).keyBy(key.toString()).mapValues(omit<T, K>(key)).value()
+}
+
+function searchParent(obj: any | undefined, key: string): any {
+  if (obj === undefined) {
+    return undefined
+  }
+
+  if (obj.__args[key]) {
+    return obj.__args[key]
+  }
+
+  if (obj.__parent && obj.__parent[key]) {
+    return obj.__parent[key]
+  }
+
+  return searchParent(obj.__parent, key)
+}
+
+function searchContext(obj: any | undefined, key: string) {
+  if (obj === undefined) {
+    return undefined
+  }
+
+  if (obj.__args[key]) {
+    return obj.__args[key]
+  }
+
+  if (obj.__parent && obj.__parent[key]) {
+    return obj.__parent[key]
+  }
+
+  return searchParent(obj.__parent, key)
+}
+
+function insertMetadata(obj: any, data: object): any {
+  if (Array.isArray(obj)) {
+    return obj.map((elem) => insertMetadata(elem, data))
+  } else if (typeof obj === 'object') {
+    const transformed = Object.keys(obj).reduce((newobj, key) => {
+      newobj[key] = insertMetadata(obj[key], data)
+      return newobj
+    }, {} as any)
+    return Object.assign({}, transformed, data)
+  } else {
+    return obj
+  }
 }
 
 export function convert (config: IConfig): GraphQLSchema {
@@ -120,19 +166,19 @@ export function convert (config: IConfig): GraphQLSchema {
         if (model.links != null) {
           for (const [typeName, link] of Object.entries(model.links)) {
             const linkType = toGraphQLType(astFromTypeName(typeName))
-            if (linkType && isOutputType(linkType)) {
+            if (linkType && isOutputType(linkType) && config.resources[typeName]) {
+              const params = _.mapValues(link.params, (param) => {
+                if (typeof param === 'string') {
+                  return {
+                    type: 'string',
+                    source: param
+                  }
+                }
+                return param
+              })
               res[typeName] = {
                 type: linkType,
-                args: _.chain(link.params)
-                       .mapValues((param) => {
-                          if (typeof param === 'string') {
-                            return {
-                              type: 'string',
-                              source: param
-                            }
-                          }
-                          return param
-                       })
+                args: _.chain(params)
                        .pickBy(_.matches({ source: 'args' }))
                        .mapValues(({ type }) => {
                          const argType = toGraphQLType(astFromTypeName(type))
@@ -144,7 +190,94 @@ export function convert (config: IConfig): GraphQLSchema {
                          }
                        })
                        .pickBy((value) => value != null)
-                       .value() as GraphQLFieldConfigArgumentMap
+                       .value() as GraphQLFieldConfigArgumentMap,
+                resolve: async (source, args, context) => {
+                  const resource = config.resources[typeName]
+
+                  function getArg (key: string) {
+                    if (params[key] == null) {
+                      throw new Error(`don't know how to get parameter ${key} for link ${typeName} on model ${name}`)
+                    }
+                    switch (params[key].source) {
+                      case 'args': {
+                        return args[key]
+                      }
+                      case 'parent': {
+                        const value = source[key]
+                        if (value == null) {
+                          throw new Error(`couldn't find [${key}] in ${JSON.stringify(source)}`)
+                        }
+                        return value
+                      }
+                      case 'context': {
+                        const value = searchParent(source, key)
+                        if (value == null) {
+                          throw new Error(`couldn't find [${key}] in full context from ${JSON.stringify(source)}`)
+                        }
+                        return value
+                      }
+                    }
+                  }
+
+                  const parts = resource.many.path.split('/')
+                  const filled = parts.map((part) => {
+                    if (part[0] === ':') {
+                      return getArg(part.substring(1))
+                    } else {
+                      return part
+                    }
+                  }).join('/')
+
+                  const query: {[key: string]: any} = {}
+
+                  for (const [key, param] of Object.entries(resource.many.params)) {
+                    if (params[key] != null) { // if we know how to get it
+                      query[key] = getArg(key)
+                    } else if (param.required && param.default != null) { // if required and have default
+                      query[key] = param.default
+                    } else if (param.required) { // required and not supplied
+                      throw new Error(`missing required param ${key}`)
+                    }
+                  }
+
+                  // const unique = _.some(resource.many.uid, (index) =>
+                  //   _.every(index, (field) => args[field] != null))
+
+                  // if (!unique) {
+                  //   throw new Error('not fetching a unique item. please fill out ' +
+                  //                   resource.many.uid.map((fields) => `[${fields.join(',')}]`).join(', or '))
+                  // }
+
+                  console.log(`GET ${config.base_url}${filled}?${Object.entries(query).map(([k, v]) => `${k}=${v}`).join('&')}`)
+
+                  try {
+                    const response = await got(`${config.base_url}${filled}`, {
+                      query,
+                      headers: {
+                        authorization: context.authorization
+                      }
+                    })
+                    const data = JSON.parse(response.body)
+                    console.log(data)
+                    if (!Array.isArray(data)) {
+                      throw new Error('did not receive an array')
+                    }
+                    if (data.length > 1) {
+                      throw new Error('received more than 1 object')
+                    }
+                    return insertMetadata(data[0], {
+                      __args: args,
+                      __parent: source
+                    })
+                  } catch (e) {
+                    if ('response' in e) {
+                      const err: GotError = e
+                      throw new Error(err.response.body)
+                    } else {
+                      throw e
+                    }
+                  }
+                }
               }
             } else {
               console.error(`error: no such type ${typeName}`)
@@ -227,7 +360,8 @@ export function convert (config: IConfig): GraphQLSchema {
             if (param.required && param.default != null && args[key] == null) {
               throw new Error(`missing required param ${key}`)
             }
-            if (args[key] != null) {
+            // TODO: fill in default?
+            if (args[key] != null) { // why?
               query[key] = args[key]
             }
           }
@@ -257,7 +391,10 @@ export function convert (config: IConfig): GraphQLSchema {
             if (data.length > 1) {
               throw new Error('received more than 1 object')
             }
-            return data[0]
+            return insertMetadata(data[0], {
+              __args: args,
+              __parent: source
+            })
           } catch (e) {
             if ('response' in e) {
               const err: GotError = e
