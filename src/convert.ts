@@ -63,24 +63,20 @@ export function convert (config: IConfig): GraphQLSchema {
       queries[name] = {
         type: resourceType,
         args:
-          _
-          .chain(
-            keysFromProp(
-              resource.many.path
-                .split('/')
-                .filter((p) => p[0] === ':')
-                .map((p) => ({
-                  name: p.substring(1),
-                  type: 'string',
-                  required: true
-                })),
-              'name'
-            ) // path params as keys
-          )
+          _.chain(resource.many.path)
+          .split('/')
+          .filter((p) => p[0] === ':')
+          .map((p) => ({
+            name: p.substring(1),
+            type: 'string',
+            required: true
+          }))
+          .keyBy('name')
+          .mapValues(omit('name')) // turn path parts into same format as args
           .assign(resource.many.params)
           .mapValues(({ type, default: defaultValue, required }) => {
             let argType = toGraphQLType(astFromTypeName(type), types)
-            if (argType && isNullableType(argType)) {
+            if (argType != null && isNullableType(argType)) {
               if (required) {
                 argType = new GraphQLNonNull(argType)
               }
@@ -90,11 +86,9 @@ export function convert (config: IConfig): GraphQLSchema {
                 defaultValue
               }
             } else {
-              console.error(`error: no such nullable type ${type}`)
-              return null
+              throw new Error(`no such nullable type ${type}`)
             }
           })
-          .pickBy((x) => x != null) // filter out args that errored
           .value() as GraphQLFieldConfigArgumentMap,
         resolve: async (source, args, context) => {
           const parts = resource.many.path.split('/')

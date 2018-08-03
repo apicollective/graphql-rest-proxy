@@ -9,7 +9,7 @@
   "dependencies": {
     "apollo-server": "^2.0.0",
     "got": "^8.3.2",
-    "graphql": "^0.13.2",
+    "graphql": "^14.0.0-rc.2",
     "lodash": "^4.17.10"
   },
   "devDependencies": {

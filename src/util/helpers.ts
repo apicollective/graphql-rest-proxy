@@ -1,3 +1,4 @@
+import assert from 'assert'
 import {
   GraphQLList,
   GraphQLNonNull,
@@ -43,15 +44,19 @@ export function insertMetadata (obj: any, data: object): any {
 }
 
 export function graphQLTypeName (type: GraphQLType): string {
+  const prefix = 'Nullable'
+
   if (isNamedType(type)) {
-    return type.name
+    return prefix + type.name
   }
 
   if (isNonNullType(type)) {
-    return `Nullable${graphQLTypeName(type.ofType)}`
+    const child = graphQLTypeName(type.ofType)
+    assert(child.startsWith(prefix))
+    return child.substring(prefix.length) // strip 'Nullable'
   }
 
-  return `ListOf${graphQLTypeName((type as GraphQLList<any>).ofType)}`
+  return `NullableListOf${graphQLTypeName((type as GraphQLList<any>).ofType)}`
 }
 
 const mapEntryCache = new Map<string, GraphQLObjectType>()
@@ -66,7 +71,7 @@ function makeMapEntry (valueType: GraphQLOutputType): GraphQLObjectType {
     name: `StringTo${name}`,
     fields: {
       key: {
-        type: GraphQLString
+        type: new GraphQLNonNull(GraphQLString)
       },
       value: {
         type: valueType
