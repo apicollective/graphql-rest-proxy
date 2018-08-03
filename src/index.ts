@@ -7,7 +7,7 @@ import { IConfig } from './util/types'
 const [node, index, configFn] = process.argv
 
 if (!configFn) {
-  console.error(`Usage: ${node} ${index} <config.json>`) // tslint:disable-line:no-console
+  console.error(`Usage: ${node} ${index} <config.json>`)
   process.exit()
 }
 
@@ -21,5 +21,5 @@ const server = new ApolloServer({
 })
 
 server.listen().then(({ url }) => {
-  console.log(`${url}`) // tslint:disable-line:no-console
+  console.log(`${url}`)
 })
