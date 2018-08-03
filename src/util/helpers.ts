@@ -12,7 +12,7 @@ import {
 } from 'graphql'
 import { AstNode } from './ast'
 
-export function searchParent (obj: any | undefined, key: string): any {
+export function searchContext (obj: any | undefined, key: string): any {
   if (obj === undefined) {
     return undefined
   }
@@ -25,23 +25,7 @@ export function searchParent (obj: any | undefined, key: string): any {
     return obj.__parent[key]
   }
 
-  return searchParent(obj.__parent, key)
-}
-
-export function searchContext (obj: any | undefined, key: string) {
-  if (obj === undefined) {
-    return undefined
-  }
-
-  if (obj.__args[key]) {
-    return obj.__args[key]
-  }
-
-  if (obj.__parent && obj.__parent[key]) {
-    return obj.__parent[key]
-  }
-
-  return searchParent(obj.__parent, key)
+  return searchContext(obj.__parent, key)
 }
 
 export function insertMetadata (obj: any, data: object): any {

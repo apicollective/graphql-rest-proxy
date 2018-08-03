@@ -9,7 +9,7 @@ import {
 } from 'graphql'
 import _ from 'lodash'
 import { astFromTypeName } from './util/ast'
-import { insertMetadata, searchParent, toGraphQLType } from './util/helpers'
+import { insertMetadata, searchContext, toGraphQLType } from './util/helpers'
 import { IConfig } from './util/types'
 
 class ValidationError extends Error {
@@ -162,7 +162,7 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
                   return value
                 }
                 case 'context': {
-                  const value = searchParent(source, key)
+                  const value = searchContext(source, key)
                   if (value == null) {
                     throw new Error(`couldn't find [${key}] in full context from ${JSON.stringify(source)}`)
                   }

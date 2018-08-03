@@ -46,7 +46,7 @@ export function convert (config: IConfig): GraphQLSchema {
       description: enm.description,
       values: _.chain(enm.values)
                .keyBy('name')
-               .mapKeys((key) => key.toUpperCase())
+               .mapKeys((value, key) => key.toUpperCase())
                .mapValues((enumValue) => ({
                  value: enumValue.name,
                  description: enumValue.description
