@@ -12,7 +12,6 @@ export interface IConfig {
 }
 
 interface IModel {
-  name: string
   description?: string
   fields: IField[]
   links?: {
@@ -25,10 +24,10 @@ interface IField {
   type: string
   default: any
   required: boolean
+  description?: string
 }
 
 interface IEnum {
-  name: string
   description: string
   values: IEnumValue[]
 }
