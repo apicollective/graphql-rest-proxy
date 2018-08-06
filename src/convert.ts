@@ -1,8 +1,10 @@
 import got, { GotError } from 'got'
 import {
+  GraphQLBoolean,
   GraphQLFieldConfigArgumentMap,
   GraphQLFieldConfigMap,
   GraphQLFloat,
+  GraphQLID,
   GraphQLInt,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -16,19 +18,38 @@ import _ from 'lodash'
 import { omit } from 'lodash/fp'
 import { createEnums } from './enums'
 import { createModels } from './model'
-import { astFromTypeName } from './util/ast'
-import { insertMetadata, toGraphQLType } from './util/helpers'
-import { IConfig } from './util/types'
+import { createUnions } from './unions'
+import {
+  astFromTypeName,
+  GraphQLDate,
+  GraphQLDateTime,
+  GraphQLJSON,
+  GraphQLLong,
+  GraphQLObject,
+  GraphQLUnit,
+  IConfig,
+  insertMetadata,
+  toGraphQLType
+} from './util'
 
 export function convert (config: IConfig): GraphQLSchema {
-  const types = new Map<string, GraphQLType>()
-  types.set('string', GraphQLString)
-  types.set('number', GraphQLInt)
-  types.set('double', GraphQLFloat)
+  const types = new Map<string, GraphQLType>([
+    ['boolean', GraphQLBoolean],
+    ['date-iso8601', GraphQLDate],
+    ['date-time-iso8601', GraphQLDateTime],
+    ['double', GraphQLFloat],
+    ['integer', GraphQLInt],
+    ['json', GraphQLJSON],
+    ['long', GraphQLLong],
+    ['string', GraphQLString],
+    ['object', GraphQLObject],
+    ['unit', GraphQLUnit],
+    ['uuid', GraphQLID]
+  ])
 
   createModels(types, config)
-
   createEnums(types, config)
+  createUnions(types, config)
 
   // create queries
   const queries: GraphQLFieldConfigMap<any, any> = {}

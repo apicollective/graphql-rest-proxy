@@ -6,6 +6,9 @@ export interface IConfig {
   enums: {
     [key: string]: IEnum
   }
+  unions: {
+    [key: string]: IUnion
+  }
   resources: {
     [key: string]: IResource
   }
@@ -25,6 +28,12 @@ interface IField {
   default: any
   required: boolean
   description?: string
+}
+
+interface IUnion {
+  description?: string
+  discriminator?: string
+  types: Array<{ type: string }>
 }
 
 interface IEnum {

@@ -12,6 +12,7 @@ import {
   isObjectType,
   isOutputType
 } from 'graphql'
+import { camelCase, upperFirst } from 'lodash'
 import { AstNode } from './ast'
 
 export function searchContext (obj: any | undefined, key: string): any {
@@ -48,7 +49,7 @@ export function graphQLTypeName (type: GraphQLType): string {
   const prefix = 'Nullable'
 
   if (isNamedType(type)) {
-    return prefix + type.name
+    return prefix + upperFirst(camelCase(type.name))
   }
 
   if (isNonNullType(type)) {

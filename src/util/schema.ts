@@ -5,7 +5,7 @@ const ARRAYOF_REGEX = /^\[(.+)\]$/
 const MAPOF_REGEX = /^map\[(.+)\]$/
 
 export type Kind =
-  'array'
+  | 'array'
   | 'boolean'
   | 'date-iso8601'
   | 'date-time-iso8601'

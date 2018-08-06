@@ -22,6 +22,55 @@
         { "name": "ounce", "description": "A unit of mass equal to 1 / 16 POUND (standard name oz)." },
         { "name": "pound", "description": "A unit of mass equal to 453.59237 grams (avoirdupois pound, standard name lb)." }
       ]
+    },
+    "levy_component": {
+      "values": [
+        { "name": "goods", "description": "The value of goods" },
+        { "name": "duty" },
+        { "name": "insurance" },
+        { "name": "freight" },
+        { "name": "vat", "description": "Value-Added Tax" }
+      ]
+    },
+    "duty_simple_expression_type": {
+      "values": [
+        { "name": "free" },
+        { "name": "percent" },
+        { "name": "per_uom" },
+        { "name": "flat" }
+      ]
+    },
+    "duty_compound_expression_type": {
+      "values": [
+        { "name": "sum" },
+        { "name": "max" },
+        { "name": "min" }
+      ]
+    },
+    "duty_rate_unit_of_measure": {
+      "values": [
+        { "name": "kg" },
+        { "name": "sq_m" },
+        { "name": "item" },
+        { "name": "pair" }
+      ]
+    }
+  },
+  "unions": {
+    "deminimis": {
+      "description": "De Minimis describes the country specific rules for exactly how tax and duties are calculated, as well as any exemptions that apply. See https://en.wikipedia.org/wiki/De_minimis for more information.",
+      "discriminator": "discriminator",
+      "types": [
+        { "type": "deminimis_simple" },
+        { "type": "deminimis_per_item" }
+      ]
+    },
+    "duty_expression": {
+      "discriminator": "discriminator",
+      "types": [
+        { "type": "duty_compound_expression" },
+        { "type": "duty_simple_expression" }
+      ]
     }
   },
   "models": {
@@ -92,7 +141,77 @@
         { "name": "phrase_id", "type": "string", "required": false },
         { "name": "customs_description", "type": "string", "required": false },
         { "name": "countries_of_origin", "type": "[string]", "description": "Country code iso31663", "required": false },
-        { "name": "hs6", "type": "string", "required": false }
+        { "name": "hs6", "type": "string", "required": false },
+        { "name": "tariffs", "type": "map[tariff_code_duty]", "required": false, "description": "Destination country code iso31663 to tariff codes" }
+      ]
+    },
+    "tariff_code_duty": {
+      "description": "For a specific destination, the full tariff_code and associated duties.",
+      "fields": [
+        { "name": "tariff_code", "type": "string", "description": "Code for the a specific destination. Also known as hs10." },
+        { "name": "duties", "type": "map[duties]", "description": "Origin country code iso31663 to duties" }
+      ]
+    },
+    "duties": {
+      "description": "For a specific origin and destination, the associated duties.",
+      "fields": [
+        { "name": "duty_rate", "type": "duty", "description": "The original model for duty rate." },
+        { "name": "duty_rate_v2", "type": "duty_rate", "description": "A newer, more complex/accurate, model for duty rate.", "required": false }
+      ]
+    },
+    "duty": {
+      "description": "Represents a simple model of duties that apply to a given item / trade lane.",
+      "fields": [
+        { "name": "rate", "type": "double", "description": "The combined duty rate. A value of 25 indicates a duty rate of 25%", "example": "25", "minimum": 0 },
+        { "name": "components", "type": "[levy_component]", "description": "The components to which duty is applied.", "minimum": 1 },
+        { "name": "deminimis", "type": "deminimis", "required": false, "description": "Describes the duty de minimis if there is one for this destination" },
+        { "name": "name", "type": "string", "required": false, "description": "Generally used for Where this rate came from and potentially its type." }
+      ]
+    },
+    "deminimis_simple": {
+      "description": "De Minimis for most common example which includes a value threshold and rules on what components are used in the duty calculation",
+      "fields": [
+        { "name": "value", "type": "double", "required": false, "description": "The value below which no tax or duty is collected, which is a sum of the values associated with the de minimis components." },
+        { "name": "currency", "type": "string", "description": "The ISO-4217 3 character currency code in which the value is calculated." },
+        { "name": "components", "type": "[levy_component]", "description": "The components that are used to determine the value. Note that these components may be different from the components for the VAT or duty itself." },
+        { "name": "minimum", "type": "double", "required": false, "description": "If the calculated VAT or duty amount is less than the minimum, no VAT or duty is owed. In other words, this is the minimum payable amount.", "minimum": "0" }
+      ]
+    },
+    "deminimis_per_item": {
+      "description": "De Minimis per item describes rules which require minimum and/or maximum values per item",
+      "fields": [
+        { "name": "currency", "type": "string", "description": "The ISO-4217 3 character currency code in which the value is calculated" },
+        { "name": "minimum", "type": "double", "required": false, "description": "If specified, the minimum amount due per item", "minimum": "0" },
+        { "name": "maximum", "type": "double", "required": false, "description": "If specified, the maximum amount due per item", "minimum": "0" }
+      ]
+    },
+    "duty_rate": {
+      "description": "Structured duty rate",
+      "fields": [
+        { "name": "id", "type": "string" },
+        { "name": "raw_id", "type": "string", "description": "id of the duty_raw from which this was generated" },
+        { "name": "destination", "type": "string", "description": "alpha-3 ISO 3166-1" },
+        { "name": "origin", "type": "string", "description": "alpha-3 ISO 3166-1" },
+        { "name": "tariff_code", "type": "string" },
+        { "name": "expression", "type": "duty_expression" },
+        { "name": "parser_version", "type": "string", "description": "Version of parser that translated between raw and structured duty rate." },
+        { "name": "created_at", "type": "date-time-iso8601" }
+      ]
+    },
+    "duty_simple_expression": {
+      "description": "Non-compound duty expression: percent of price or 9.9 per unit of measure",
+      "fields": [
+        { "name": "type", "type": "duty_simple_expression_type", "description": "free, precent of price, etc" },
+        { "name": "value", "type": "double" },
+        { "name": "unit_of_measure", "type": "duty_rate_unit_of_measure", "required": false }
+      ]
+    },
+    "duty_compound_expression": {
+      "description": "nestable binary operation such as SUM, MAX, MIN",
+      "fields": [
+        { "name": "type", "type": "duty_compound_expression_type", "description": "sum, max, min" },
+        { "name": "left", "type": "duty_expression" },
+        { "name": "right", "type": "duty_expression" }
       ]
     }
   },
@@ -114,12 +233,12 @@
             "required": false
           },
           "limit": {
-            "type": "number",
+            "type": "integer",
             "required": true,
             "default": 25
           },
           "offset": {
-            "type": "number",
+            "type": "integer",
             "required": true,
             "default": 0
           }
@@ -141,4 +260,5 @@
       }
     }
   }
+
 }
