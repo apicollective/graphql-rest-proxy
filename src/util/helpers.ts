@@ -9,6 +9,7 @@ import {
   isNamedType,
   isNonNullType,
   isNullableType,
+  isObjectType,
   isOutputType
 } from 'graphql'
 import { AstNode } from './ast'

@@ -1,14 +1,16 @@
+import assert from 'assert'
 import got, { GotError } from 'got'
 import {
   GraphQLFieldConfigArgumentMap,
   GraphQLFieldConfigMap,
+  GraphQLFieldResolver,
   GraphQLObjectType,
   GraphQLType,
   isInputType,
   isOutputType
 } from 'graphql'
 import _ from 'lodash'
-import { astFromTypeName } from './util/ast'
+import { astFromTypeName, AstNode, isEnclosingType } from './util/ast'
 import { insertMetadata, searchContext, toGraphQLType } from './util/helpers'
 import { IConfig } from './util/types'
 
@@ -79,7 +81,8 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
 
       // plain old fields
       for (const field of model.fields) {
-        const type = toGraphQLType(astFromTypeName(field.type), types)
+        const typeAst = astFromTypeName(field.type)
+        const type = toGraphQLType(typeAst, types)
 
         if (type == null) {
           throw new ValidationError(`unknown type '${field.type}'`).model(modelName).field(field.name)
@@ -89,9 +92,49 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
           throw new ValidationError(`${field.type} is not a GraphQLOutputType`).model(modelName).field(field.name)
         }
 
+        // find any maps in the current type
+        let containsMap = false
+        let currAst = typeAst
+        while (isEnclosingType(currAst)) {
+          if (currAst.name === 'map') {
+            containsMap = true
+            break
+          }
+          currAst = currAst.type
+        }
+
+        let resolve: GraphQLFieldResolver<any, any> | undefined
+
+        // convert JSON objects to maps [{ key, value }]
+        if (containsMap) {
+          resolve = (source) => {
+            const raw = source[field.name]
+
+            function transformMap (obj: object, ast: AstNode): object {
+              if (ast.name === 'map') {
+                return Object.entries(obj)
+                  .filter(([ key ]) => key !== '__args' && key !== '__parent')
+                  .map(([ key, value ]) => ({
+                    key,
+                    value: transformMap(value, ast.type)
+                  }))
+              } else if (ast.name === 'array') {
+                // TODO: test
+                assert(Array.isArray(obj))
+                return (obj as object[]).map((elem) => transformMap(elem, ast.type))
+              } else {
+                return obj
+              }
+            }
+
+            return transformMap(raw, typeAst)
+          }
+        }
+
         res[field.name] = {
           type,
-          description: field.description
+          description: field.description,
+          resolve
         }
       }
 
