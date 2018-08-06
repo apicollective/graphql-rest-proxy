@@ -1,6 +1,5 @@
 import got, { GotError } from 'got'
 import {
-  GraphQLEnumType,
   GraphQLFieldConfigArgumentMap,
   GraphQLFieldConfigMap,
   GraphQLFloat,
@@ -15,21 +14,11 @@ import {
 } from 'graphql'
 import _ from 'lodash'
 import { omit } from 'lodash/fp'
+import { createEnums } from './enums'
 import { createModels } from './model'
 import { astFromTypeName } from './util/ast'
 import { insertMetadata, toGraphQLType } from './util/helpers'
 import { IConfig } from './util/types'
-
-/**
- * Turn `[{name: 'x', type: 1}, {name: 'y', type: 2}]` into `{'x': {type: 1}, 'y': {type: 2}}`
- */
-function keysFromProp<T extends object, K extends keyof T> (objs: T[], key: K): {
-  [index: string]: {
-    [P in Exclude<keyof T, K>]: T[P]
-  }
-} {
-  return _.chain(objs).keyBy(key.toString()).mapValues(omit<T, K>(key)).value()
-}
 
 export function convert (config: IConfig): GraphQLSchema {
   const types = new Map<string, GraphQLType>()
@@ -39,21 +28,7 @@ export function convert (config: IConfig): GraphQLSchema {
 
   createModels(types, config)
 
-  // create enum types
-  for (const [name, enm] of Object.entries(config.enums)) {
-    types.set(name, new GraphQLEnumType({
-      name,
-      description: enm.description,
-      values: _.chain(enm.values)
-               .keyBy('name')
-               .mapKeys((value, key) => key.toUpperCase())
-               .mapValues((enumValue) => ({
-                 value: enumValue.name,
-                 description: enumValue.description
-               }))
-               .value()
-    }))
-  }
+  createEnums(types, config)
 
   // create queries
   const queries: GraphQLFieldConfigMap<any, any> = {}
