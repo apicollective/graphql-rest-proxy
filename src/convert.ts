@@ -81,8 +81,7 @@ export function convert (config: IConfig): GraphQLSchema {
             if (param.required && param.default != null && args[key] == null) {
               throw new Error(`missing required param ${key}`)
             }
-            // TODO: fill in default?
-            if (args[key] != null) { // why?
+            if (args[key] != null) { // needed?
               query[key] = args[key]
             }
           }
