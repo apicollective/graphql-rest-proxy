@@ -17,7 +17,8 @@ const server = new ApolloServer({
   schema: convert(config),
   context: ({ req }: { req: Request }) => ({
     authorization: req.headers.authorization
-  })
+  }),
+  tracing: true
 })
 
 server.listen().then(({ url }) => {
