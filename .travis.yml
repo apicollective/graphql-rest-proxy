@@ -1,0 +1,8 @@
+language: node_js
+node_js:
+- node # latest
+- lts/*
+
+script:
+- npm run build
+- npm run lint
