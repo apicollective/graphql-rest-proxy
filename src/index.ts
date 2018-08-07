@@ -1,17 +1,23 @@
 import { ApolloServer } from 'apollo-server'
 import { Request } from 'express'
 import fs from 'fs'
+import { inspect } from 'util'
 import { convert } from './convert'
-import { IConfig } from './util/types'
+import { mergeConfigs } from './merge'
 
-const [node, index, configFn] = process.argv
+const [node, mainjs, ...configs] = process.argv
 
-if (!configFn) {
-  console.error(`Usage: ${node} ${index} <config.json>`)
+if (!configs) {
+  console.error(`Usage: ${node} ${mainjs} <config.json> <overrides.json> ...`)
   process.exit()
 }
 
-const config = JSON.parse(fs.readFileSync(configFn).toString()) as IConfig
+const config = configs
+  .map((filename) => JSON.parse(fs.readFileSync(filename).toString()))
+  .reduce(mergeConfigs)
+
+console.log('Final config:')
+console.log(inspect(config, true, 9999, true))
 
 const server = new ApolloServer({
   schema: convert(config),

@@ -1,0 +1,12 @@
+{
+  "models": {
+    "item": {
+      "links": {
+        "item_harmonization": {
+          "organization": "context",
+          "number": "parent"
+        }
+      }
+    }
+  }
+}

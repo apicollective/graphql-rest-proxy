@@ -61,15 +61,15 @@
       "description": "De Minimis describes the country specific rules for exactly how tax and duties are calculated, as well as any exemptions that apply. See https://en.wikipedia.org/wiki/De_minimis for more information.",
       "discriminator": "discriminator",
       "types": [
-        { "type": "deminimis_simple" },
-        { "type": "deminimis_per_item" }
+        { "name": "deminimis_simple" },
+        { "name": "deminimis_per_item" }
       ]
     },
     "duty_expression": {
       "discriminator": "discriminator",
       "types": [
-        { "type": "duty_compound_expression" },
-        { "type": "duty_simple_expression" }
+        { "name": "duty_compound_expression" },
+        { "name": "duty_simple_expression" }
       ]
     }
   },
@@ -87,15 +87,7 @@
         { "name": "attributes", "type": "map[string]", "default": {}, "description": "Attributes of the items. An attribute of type intent must be given as a string representation of a decimal to be correctly localized." },
         { "name": "dimensions", "type": "dimensions" },
         { "name": "images", "type": "[image]", "default": [] }
-      ],
-      "links": {
-        "item_harmonization": {
-          "params": {
-            "organization": "context",
-            "number": "parent"
-          }
-        }
-      }
+      ]
     },
     "price": {
       "description": "Represents an amount-currency pair for a basic price",

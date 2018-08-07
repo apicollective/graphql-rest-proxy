@@ -29,10 +29,11 @@
     "typescript": "^2.9.2"
   },
   "nodemonConfig": {
-    "exec": "ts-node src/index.ts config.json",
+    "exec": "ts-node src/index.ts config.json overrides.json",
     "watch": [
       "src",
-      "config.json"
+      "config.json",
+      "overrides.json"
     ],
     "ext": "ts"
   }

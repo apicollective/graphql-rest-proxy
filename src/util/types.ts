@@ -33,7 +33,7 @@ interface IField {
 interface IUnion {
   description?: string
   discriminator?: string
-  types: Array<{ type: string }>
+  types: Array<{ name: string }>
 }
 
 interface IEnum {
