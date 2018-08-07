@@ -235,24 +235,10 @@
           ["id"]
         ],
         "params": {
-          "id": {
-            "type": "[string]",
-            "required": false
-          },
-          "number": {
-            "type": "[string]",
-            "required": false
-          },
-          "limit": {
-            "type": "integer",
-            "required": true,
-            "default": 25
-          },
-          "offset": {
-            "type": "integer",
-            "required": true,
-            "default": 0
-          }
+          "id": { "type": "[string]", "required": false },
+          "number": { "type": "[string]", "required": false },
+          "limit": { "type": "integer", "required": true, "default": 25 },
+          "offset": { "type": "integer", "required": true, "default": 0 }
         }
       }
     },
@@ -263,10 +249,7 @@
           ["organization", "number"]
         ],
         "params": {
-          "number": {
-            "type": "[string]",
-            "required": false
-          }
+          "number": { "type": "[string]", "required": false }
         }
       }
     },
