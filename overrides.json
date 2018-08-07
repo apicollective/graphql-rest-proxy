@@ -3,8 +3,10 @@
     "item": {
       "links": {
         "item_harmonization": {
-          "organization": "context",
-          "number": "parent"
+          "params": {
+            "organization": "context",
+            "number": "parent"
+          }
         }
       }
     }
