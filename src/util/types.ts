@@ -18,7 +18,7 @@ interface IModel {
   description?: string
   fields: IField[]
   links?: {
-    [type: string]: ILink
+    [name: string]: ILink
   }
 }
 
@@ -28,6 +28,19 @@ interface IField {
   default: any
   required: boolean
   description?: string
+}
+
+type Source = 'context' | 'parent' | 'args'
+
+interface ILink {
+  type?: string
+  params: {
+    [key: string]: {
+      source: Source
+      type?: string
+      path?: string // lodash get() syntax
+    }
+  }
 }
 
 interface IUnion {
@@ -49,19 +62,6 @@ interface IEnumValue {
 interface IResource {
   one?: IGetter
   many: IGetter // TODO: optional
-}
-
-type Source = 'context' | 'parent' | 'args'
-
-interface ILink {
-  params: {
-    [key: string]:
-    | Source
-    | {
-      type: string
-      source: Source
-    }
-  }
 }
 
 interface IGetter {

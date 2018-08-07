@@ -139,40 +139,38 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
       }
 
       // links
-      for (const [linkTypeName, link] of Object.entries(model.links || {})) {
+      for (const [linkName, link] of Object.entries(model.links || {})) {
+
+        const linkTypeName = link.type || linkName
 
         const linkType = toGraphQLType(astFromTypeName(linkTypeName), types)
 
         if (!linkType) {
-          throw new ValidationError(`unknown type`).model(modelName).link(linkTypeName)
+          throw new ValidationError(`unknown type ${linkTypeName}`).model(modelName).link(linkName)
         }
 
         if (!isOutputType(linkType)) {
-          throw new ValidationError(`not a GraphQLOutputType`).model(modelName).link(linkTypeName)
+          throw new ValidationError(`${linkTypeName} is not a GraphQLOutputType`).model(modelName).link(linkName)
         }
 
         if (config.resources[linkTypeName] == null) {
-          throw new ValidationError(`no such resource`).model(modelName).link(linkTypeName)
+          throw new ValidationError(`no such resource`).model(modelName).link(linkName)
         }
 
         // convert strings to { type, source }
-        const params = _.mapValues(link.params, (param) => {
-          if (typeof param === 'string') {
-            return {
-              type: 'string',
-              source: param
-            }
-          }
-          return param
-        })
+        const params = _.mapValues(link.params, (param, name) => ({
+          source: param.source,
+          type: param.type || 'string',
+          path: param.path || name
+        }))
 
         Object.entries(params).forEach(([ name, { source } ]) => {
           if (source !== 'args' && source !== 'parent' && source !== 'context') {
-            throw new ValidationError(`invalid source ${source}`).model(modelName).link(linkTypeName).param(name)
+            throw new ValidationError(`invalid source ${source}`).model(modelName).link(linkName).param(name)
           }
         })
 
-        res[linkTypeName] = {
+        res[linkName] = {
           type: linkType,
           args: _.chain(params)
                  .pickBy(_.matches({ source: 'args' })) // params that should be args
@@ -182,7 +180,7 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
                      return { type: argType } // create the arg object
                    } else {
                      throw new ValidationError(`Arg[${name}]: no such type '${type}'`)
-                              .model(modelName).link(linkTypeName)
+                              .model(modelName).link(linkName)
                    }
                  })
                  .value() as GraphQLFieldConfigArgumentMap,
@@ -191,14 +189,14 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
 
             function getArg (key: string) {
               if (params[key] == null) {
-                throw new Error(`don't know how to get parameter ${key} for link ${linkTypeName} on model ${modelName}`)
+                throw new Error(`don't know how to get parameter ${key} for link ${linkName} on model ${modelName}`)
               }
               switch (params[key].source) {
                 case 'args': {
                   return args[key]
                 }
                 case 'parent': {
-                  const value = source[key]
+                  const value = _.get(source, params[key].path)
                   if (value == null) {
                     throw new Error(`couldn't find [${key}] in ${JSON.stringify(source)}`)
                   }

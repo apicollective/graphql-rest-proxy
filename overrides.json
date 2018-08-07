@@ -4,8 +4,25 @@
       "links": {
         "item_harmonization": {
           "params": {
-            "organization": "context",
-            "number": "parent"
+            "organization": {
+              "source": "context"
+            },
+            "number": {
+              "source": "parent"
+            }
+          }
+        }
+      }
+    },
+    "organization": {
+      "links": {
+        "parent": {
+          "type": "organization",
+          "params": {
+            "id": {
+              "source": "parent",
+              "path": "parent.id"
+            }
           }
         }
       }

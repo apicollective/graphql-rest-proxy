@@ -1,6 +1,12 @@
 {
   "base_url": "https://api.flow.io",
   "enums": {
+    "environment": {
+      "values": [
+        { "name": "sandbox", "description": "In sandbox, no external services (e.g. orders, payments, logistics) will generate real transactions" },
+        { "name": "production", "description": "In production, all external services are live and will generate real transactions" }
+      ]
+    },
     "image_tag": {
       "values": [
         { "name": "thumbnail", "description": "Thumbnail images identify the image to use when displaying products in the Flow Console."},
@@ -74,6 +80,19 @@
     }
   },
   "models": {
+    "organization": {
+      "description": "Represents a single organization in the system, and what environment it is currently operating in.",
+      "fields": [
+        { "name": "id", "type": "string" },
+        { "name": "name", "type": "string" },
+        { "name": "environment", "type": "environment" }
+      ]
+    },
+    "organization_reference": {
+      "fields": [
+        { "name": "id", "type": "string" }
+      ]
+    },
     "item": {
       "description": "The Flow item defines a specific item that can be purchased by a consumer. For many clients, this will map to a Sku.",
       "fields": [
@@ -248,6 +267,23 @@
             "type": "[string]",
             "required": false
           }
+        }
+      }
+    },
+    "organization": {
+      "many": {
+        "path": "/organizations",
+        "uid": [
+          ["id"]
+        ],
+        "params": {
+          "id": { "type": "[string]", "required": false, "maximum": 100 },
+          "name": { "type": "string", "description": "Find organizations with this name. Case insensitive. Exact match.", "required": false },
+          "environment": { "type": "environment", "description": "Find organizations with this environment", "required": false },
+          "parent": { "type": "string", "description": "Find organizations that belong to this specified parent organization id. Case insensitive. Exact match.", "required": false },
+          "limit": { "type": "long", "default": 25, "minimum": 1, "maximum": 100 },
+          "offset": { "type": "long", "default": 0, "minimum": 0 },
+          "sort": { "type": "string", "default": "name" }
         }
       }
     }
