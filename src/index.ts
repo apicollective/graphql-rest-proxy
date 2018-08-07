@@ -7,7 +7,7 @@ import { mergeConfigs } from './merge'
 
 const [node, mainjs, ...configs] = process.argv
 
-if (!configs) {
+if (configs.length === 0) {
   console.error(`Usage: ${node} ${mainjs} <config.json> <overrides.json> ...`)
   process.exit()
 }
