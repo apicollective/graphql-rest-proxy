@@ -230,10 +230,6 @@
     "item": {
       "many": {
         "path": "/:organization/catalog/items",
-        "uid": [
-          ["organization", "number"],
-          ["id"]
-        ],
         "params": {
           "id": { "type": "[string]", "required": false },
           "number": { "type": "[string]", "required": false },
@@ -245,9 +241,6 @@
     "item_harmonization": {
       "many": {
         "path": "/:organization/harmonization/results/items",
-        "uid": [
-          ["organization", "number"]
-        ],
         "params": {
           "number": { "type": "[string]", "required": false }
         }
@@ -256,9 +249,6 @@
     "organization": {
       "many": {
         "path": "/organizations",
-        "uid": [
-          ["id"]
-        ],
         "params": {
           "id": { "type": "[string]", "required": false, "maximum": 100 },
           "name": { "type": "string", "description": "Find organizations with this name. Case insensitive. Exact match.", "required": false },

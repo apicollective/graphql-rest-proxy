@@ -15,7 +15,7 @@ import {
 import { camelCase, upperFirst } from 'lodash'
 import { AstNode } from './ast'
 
-export function searchContext (obj: any | undefined, key: string): any {
+export function searchArgs (obj: any | undefined, key: string): any {
   if (obj === undefined) {
     return undefined
   }
@@ -24,11 +24,7 @@ export function searchContext (obj: any | undefined, key: string): any {
     return obj.__args[key]
   }
 
-  if (obj.__parent && obj.__parent[key]) {
-    return obj.__parent[key]
-  }
-
-  return searchContext(obj.__parent, key)
+  return searchArgs(obj.__parent, key)
 }
 
 export function insertMetadata (obj: any, data: object): any {

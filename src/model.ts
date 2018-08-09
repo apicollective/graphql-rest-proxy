@@ -9,9 +9,10 @@ import {
   isInputType,
   isOutputType
 } from 'graphql'
+import jsonpath from 'jsonpath'
 import _ from 'lodash'
 import { astFromTypeName, AstNode, isEnclosingType } from './util/ast'
-import { insertMetadata, searchContext, toGraphQLType } from './util/helpers'
+import { insertMetadata, searchArgs, toGraphQLType } from './util/helpers'
 import { IConfig } from './util/types'
 
 class ValidationError extends Error {
@@ -19,7 +20,6 @@ class ValidationError extends Error {
   private fieldName?: string
   private linkName?: string
   private paramName?: string
-  private argName?: string
   private msg: string
 
   constructor (message: string) {
@@ -139,41 +139,43 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
       }
 
       // links
-      for (const [linkName, link] of Object.entries(model.links || {})) {
+      for (const link of model.links || []) {
 
-        const linkTypeName = link.type || linkName
-
-        const linkType = toGraphQLType(astFromTypeName(linkTypeName), types)
+        const linkName = link.name || link.type
+        const linkType = toGraphQLType(astFromTypeName(link.type), types)
 
         if (!linkType) {
-          throw new ValidationError(`unknown type ${linkTypeName}`).model(modelName).link(linkName)
+          throw new ValidationError(`unknown type ${link.type}`).model(modelName).link(linkName)
         }
 
         if (!isOutputType(linkType)) {
-          throw new ValidationError(`${linkTypeName} is not a GraphQLOutputType`).model(modelName).link(linkName)
+          throw new ValidationError(`${link.type} is not a GraphQLOutputType`).model(modelName).link(linkName)
         }
 
-        if (config.resources[linkTypeName] == null) {
+        if (config.resources[link.type] == null) {
           throw new ValidationError(`no such resource`).model(modelName).link(linkName)
         }
 
         // convert strings to { type, source }
-        const params = _.mapValues(link.params, (param, name) => ({
-          source: param.source,
+        const params = link.params.map((param) => ({
+          name: param.name,
+          location: param.location,
+          inherit: param.inherit || false,
           type: param.type || 'string',
-          path: param.path || name
+          expression: param.expression || `$['${param.name}']`
         }))
 
-        Object.entries(params).forEach(([ name, { source } ]) => {
-          if (source !== 'args' && source !== 'parent' && source !== 'context') {
-            throw new ValidationError(`invalid source ${source}`).model(modelName).link(linkName).param(name)
+        for (const { name, location } of params) {
+          if (location !== 'instance' && location !== 'args') {
+            throw new ValidationError(`invalid location ${location}`).model(modelName).link(linkName).param(name)
           }
-        })
+        }
 
         res[linkName] = {
           type: linkType,
           args: _.chain(params)
-                 .pickBy(_.matches({ source: 'args' })) // params that should be args
+                 .filter({ location: 'args', inherit: false })
+                 .keyBy('name')
                  .mapValues(({ type }, name) => {
                    const argType = toGraphQLType(astFromTypeName(type), types)
                    if (argType != null && isInputType(argType)) {
@@ -185,29 +187,46 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
                  })
                  .value() as GraphQLFieldConfigArgumentMap,
           resolve: async (source, args, context) => {
-            const resource = config.resources[linkTypeName]
+            const resource = config.resources[link.type]
 
             function getArg (key: string) {
-              if (params[key] == null) {
+              const param = params.find(({ name }) => name === key)
+              if (param == null) {
                 throw new Error(`don't know how to get parameter ${key} for link ${linkName} on model ${modelName}`)
               }
-              switch (params[key].source) {
+              switch (param.location) {
                 case 'args': {
-                  return args[key]
-                }
-                case 'parent': {
-                  const value = _.get(source, params[key].path)
-                  if (value == null) {
-                    throw new Error(`couldn't find [${key}] in ${JSON.stringify(source)}`)
+                  if (param.inherit) {
+                    const value = searchArgs(source, key)
+                    if (value == null) {
+                      throw new Error(`couldn't find [${key}] in any args in ${JSON.stringify(source)}`)
+                    }
+                    return value
+                  } else {
+                    const value = args[key]
+                    if (value == null) {
+                      throw new Error(`couldn't find arg ${key}`)
+                    }
+                    return value
                   }
-                  return value
                 }
-                case 'context': {
-                  const value = searchContext(source, key)
-                  if (value == null) {
-                    throw new Error(`couldn't find [${key}] in full context from ${JSON.stringify(source)}`)
+                case 'instance': {
+                  let values: any[]
+                  if (param.inherit) {
+                    // ???
+                    throw new Error(`not implemented yet`)
+                  } else {
+                    values = jsonpath.query(source, param.expression)
                   }
-                  return value
+                  if (values.length === 0) {
+                    throw new Error(`Model[${modelName}]: Link[${linkName}]: expression[${param.expression}]` +
+                                    `returned nothing from the instance ${JSON.stringify(source)}`)
+                  }
+                  if (values.length > 1) {
+                    throw new Error(`Model[${modelName}]: Link[${linkName}]: expression[${param.expression}]` +
+                                    `returned more than one result from the instance ${JSON.stringify(source)}`)
+                  }
+                  return values[0]
                 }
               }
             }
@@ -224,22 +243,14 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
             const query: {[key: string]: any} = {}
 
             for (const [key, param] of Object.entries(resource.many.params)) {
-              if (params[key] != null) { // if we know how to get it
+              if (params.find(({ name }) => name === key) != null) { // if we know how to get it
                 query[key] = getArg(key)
               } else if (param.required && param.default != null) { // if required and have default
                 query[key] = param.default
               } else if (param.required) { // required and not supplied
-                throw new Error(`missing required param ${key}`)
+                throw new Error(`Model[${modelName}]: Link[${linkName}]: missing required param ${key}`)
               }
             }
-
-            // const unique = _.some(resource.many.uid, (index) =>
-            //   _.every(index, (field) => args[field] != null))
-
-            // if (!unique) {
-            //   throw new Error('not fetching a unique item. please fill out ' +
-            //                   resource.many.uid.map((fields) => `[${fields.join(',')}]`).join(', or '))
-            // }
 
             // tslint:disable-next-line:max-line-length
             console.log(`GET ${config.base_url}${filled}?${Object.entries(query).map(([k, v]) => `${k}=${v}`).join('&')}`)

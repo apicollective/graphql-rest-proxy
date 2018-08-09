@@ -1,31 +1,34 @@
 {
   "models": {
     "item": {
-      "links": {
-        "item_harmonization": {
-          "params": {
-            "organization": {
-              "source": "context"
+      "links": [
+        {
+          "name": "harmonization",
+          "type": "item_harmonization",
+          "params": [
+            {
+              "name": "organization",
+              "location": "args",
+              "inherit": true
             },
-            "number": {
-              "source": "parent"
+            {
+              "name": "number",
+              "location": "instance"
             }
-          }
+          ]
         }
-      }
+      ]
     },
     "organization": {
-      "links": {
-        "parent": {
+      "links": [
+        {
+          "name": "parent",
           "type": "organization",
-          "params": {
-            "id": {
-              "source": "parent",
-              "path": "parent.id"
-            }
-          }
+          "params": [
+            { "name": "id", "location": "instance", "expression": "$.parent.id" }
+          ]
         }
-      }
+      ]
     }
   }
 }

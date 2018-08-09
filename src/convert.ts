@@ -59,7 +59,7 @@ export function convert (config: IConfig): GraphQLSchema {
       queries[name] = {
         type: resourceType,
         args:
-          _.chain(resource.many.path)
+         _.chain(resource.many.path)
           .split('/')
           .filter((p) => p[0] === ':')
           .map((p) => ({
@@ -90,7 +90,7 @@ export function convert (config: IConfig): GraphQLSchema {
           const parts = resource.many.path.split('/')
           const filled = parts.map((part) => {
             if (part[0] === ':') {
-              return args[part.substring(1)]
+              return args[part.substring(1)] // TODO: strip file extensions
             } else {
               return part
             }
@@ -105,14 +105,6 @@ export function convert (config: IConfig): GraphQLSchema {
             if (args[key] != null) { // needed?
               query[key] = args[key]
             }
-          }
-
-          const unique = _.some(resource.many.uid, (index) =>
-            _.every(index, (field) => args[field] != null))
-
-          if (!unique) {
-            throw new Error('not fetching a unique item. please fill out ' +
-                            resource.many.uid.map((fields) => `[${fields.join(',')}]`).join(', or '))
           }
 
           console.log(`GET ${config.base_url}${filled}?${Object.entries(query).map(([k, v]) => `${k}=${v}`).join('&')}`)

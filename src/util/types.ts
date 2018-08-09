@@ -17,9 +17,7 @@ export interface IConfig {
 interface IModel {
   description?: string
   fields: IField[]
-  links?: {
-    [name: string]: ILink
-  }
+  links?: ILink[]
 }
 
 interface IField {
@@ -30,17 +28,20 @@ interface IField {
   description?: string
 }
 
-type Source = 'context' | 'parent' | 'args'
-
 interface ILink {
+  name?: string
+  type: string
+  params: IParam[]
+}
+
+type Location = 'instance' | 'args'
+
+interface IParam {
+  name: string
+  location: Location
+  inherit?: boolean
   type?: string
-  params: {
-    [key: string]: {
-      source: Source
-      type?: string
-      path?: string // lodash get() syntax
-    }
-  }
+  expression?: string
 }
 
 interface IUnion {
@@ -66,7 +67,6 @@ interface IResource {
 
 interface IGetter {
   path: string
-  uid: string[][]
   params: {
     [key: string]: {
       type: string
