@@ -12,7 +12,8 @@ import {
   GraphQLString,
   GraphQLType,
   isNullableType,
-  isOutputType
+  isOutputType,
+  GraphQLList
 } from 'graphql'
 import _ from 'lodash'
 import { omit } from 'lodash/fp'
@@ -57,7 +58,7 @@ export function convert (config: IConfig): GraphQLSchema {
     const resourceType = types.get(name)
     if (resourceType && isOutputType(resourceType)) {
       queries[name] = {
-        type: resourceType,
+        type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(resourceType))),
         args:
          _.chain(resource.many.path)
           .split('/')
@@ -121,13 +122,10 @@ export function convert (config: IConfig): GraphQLSchema {
             if (!Array.isArray(data)) {
               throw new Error('did not receive an array')
             }
-            if (data.length > 1) {
-              throw new Error('received more than 1 object')
-            }
-            return insertMetadata(data[0], {
+            return data.map((elem) => insertMetadata(elem, {
               __args: args,
               __parent: source
-            })
+            }))
           } catch (e) {
             if ('response' in e) {
               const err: GotError = e
