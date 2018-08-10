@@ -11,10 +11,16 @@ import {
 } from 'graphql'
 import jsonpath from 'jsonpath'
 import _ from 'lodash'
-import { astFromTypeName, AstNode, isEnclosingType } from './util/ast'
-import { insertMetadata, searchArgs, toGraphQLType } from './util/helpers'
-import { IConfig } from './util/types'
-import { getBaseTypeName } from './util';
+import {
+  astFromTypeName,
+  AstNode,
+  getBaseTypeName,
+  IConfig,
+  insertMetadata,
+  isEnclosingType,
+  searchArgs,
+  toGraphQLType
+} from './util'
 
 class ValidationError extends Error {
   private modelName?: string

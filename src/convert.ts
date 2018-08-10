@@ -6,14 +6,14 @@ import {
   GraphQLFloat,
   GraphQLID,
   GraphQLInt,
+  GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLSchema,
   GraphQLString,
   GraphQLType,
   isNullableType,
-  isOutputType,
-  GraphQLList
+  isOutputType
 } from 'graphql'
 import _ from 'lodash'
 import { omit } from 'lodash/fp'
