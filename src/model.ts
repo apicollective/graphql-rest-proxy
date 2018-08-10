@@ -14,6 +14,7 @@ import _ from 'lodash'
 import { astFromTypeName, AstNode, isEnclosingType } from './util/ast'
 import { insertMetadata, searchArgs, toGraphQLType } from './util/helpers'
 import { IConfig } from './util/types'
+import { getBaseTypeName } from './util';
 
 class ValidationError extends Error {
   private modelName?: string
@@ -141,7 +142,7 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
       // links
       for (const link of model.links || []) {
 
-        const linkName = link.name || link.type
+        const linkName = link.name || getBaseTypeName(link.type)
         const linkType = toGraphQLType(astFromTypeName(link.type), types)
 
         if (!linkType) {
@@ -152,7 +153,7 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
           throw new ValidationError(`${link.type} is not a GraphQLOutputType`).model(modelName).link(linkName)
         }
 
-        if (config.resources[link.type] == null) {
+        if (config.resources[getBaseTypeName(link.type)] == null) {
           throw new ValidationError(`no such resource`).model(modelName).link(linkName)
         }
 
@@ -187,7 +188,7 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
                  })
                  .value() as GraphQLFieldConfigArgumentMap,
           resolve: async (source, args, context) => {
-            const resource = config.resources[link.type]
+            const resource = config.resources[getBaseTypeName(link.type)]
 
             function getArg (key: string) {
               const param = params.find(({ name }) => name === key)
@@ -267,13 +268,20 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
               if (!Array.isArray(data)) {
                 throw new Error('did not receive an array')
               }
-              if (data.length > 1) {
-                throw new Error('received more than 1 object')
+              if (astFromTypeName(link.type).name === 'array') {
+                return data.map((elem) => insertMetadata(elem, {
+                  __args: args,
+                  __parent: source
+                }))
+              } else {
+                if (data.length > 1) {
+                  throw new Error('received more than 1 object')
+                }
+                return insertMetadata(data[0], {
+                  __args: args,
+                  __parent: source
+                })
               }
-              return insertMetadata(data[0], {
-                __args: args,
-                __parent: source
-              })
             } catch (e) {
               if ('response' in e) {
                 const err: GotError = e

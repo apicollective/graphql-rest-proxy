@@ -60,6 +60,13 @@
         { "name": "item" },
         { "name": "pair" }
       ]
+    },
+    "update_policy": {
+      "values": [
+        { "name": "auto" },
+        { "name": "queue", "description": "Queue item update for approval." },
+        { "name": "discard" }
+      ]
     }
   },
   "unions": {
@@ -224,6 +231,25 @@
         { "name": "left", "type": "duty_expression" },
         { "name": "right", "type": "duty_expression" }
       ]
+    },
+    "subcatalog": {
+      "description": "A configuration with custom query to select a subset of master catalog items for a localized experience",
+      "fields": [
+        { "name": "id", "type": "string" },
+        { "name": "catalog", "type": "catalog" },
+        { "name": "settings", "type": "subcatalog_settings" }
+      ]
+    },
+    "catalog": {
+      "fields": [
+        { "name": "id", "type": "string" }
+      ]
+    },
+    "subcatalog_settings": {
+      "plural": "subcatalog_settings",
+      "fields": [
+        { "name": "update_policy", "type": "update_policy", "default": "auto" }
+      ]
     }
   },
   "resources": {
@@ -257,6 +283,17 @@
           "limit": { "type": "long", "default": 25, "minimum": 1, "maximum": 100 },
           "offset": { "type": "long", "default": 0, "minimum": 0 },
           "sort": { "type": "string", "default": "name" }
+        }
+      }
+    },
+    "subcatalog": {
+      "many": {
+        "path": "/:organization/catalog/subcatalogs",
+        "params": {
+          "id": { "type": "[string]", "required": false, "maximum": 100 },
+          "limit": { "type": "long", "default": 25, "minimum": 1, "maximum": 100 },
+          "offset": { "type": "long", "default": 0, "minimum": 0 },
+          "sort": { "type": "string", "default": "-created_at" }
         }
       }
     }
