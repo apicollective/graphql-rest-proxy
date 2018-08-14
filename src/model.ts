@@ -249,7 +249,7 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
 
             const query: {[key: string]: any} = {}
 
-            for (const [key, param] of Object.entries(resource.many.params)) {
+            for (const [key, param] of Object.entries(resource.many.params || {})) {
               if (params.find(({ name }) => name === key) != null) { // if we know how to get it
                 query[key] = getArg(key)
               } else if (param.required && param.default != null) { // if required and have default

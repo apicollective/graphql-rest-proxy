@@ -19,6 +19,31 @@
         }
       ]
     },
+    "catalog": {
+      "links": [
+        {
+          "type": "[subcatalog]",
+          "params": [
+            {
+              "name": "organization",
+              "location": "args",
+              "inherit": true
+            }
+          ]
+        },
+        {
+          "name": "items",
+          "type": "[item]",
+          "params": [
+            {
+              "name": "organization",
+              "location": "args",
+              "inherit": true
+            }
+          ]
+        }
+      ]
+    },
     "organization": {
       "links": [
         {
