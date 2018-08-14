@@ -296,6 +296,11 @@
           "sort": { "type": "string", "default": "-created_at" }
         }
       }
+    },
+    "catalog": {
+      "one": {
+        "path": "/:organization/catalog"
+      }
     }
   }
 

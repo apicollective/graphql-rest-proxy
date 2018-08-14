@@ -67,7 +67,7 @@ interface IResource {
 
 interface IGetter {
   path: string
-  params: {
+  params?: {
     [key: string]: {
       type: string
       required: boolean

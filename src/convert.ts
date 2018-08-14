@@ -57,10 +57,15 @@ export function convert (config: IConfig): GraphQLSchema {
   for (const [name, resource] of Object.entries(config.resources)) {
     const resourceType = types.get(name)
     if (resourceType && isOutputType(resourceType)) {
+      const getter = resource.many || resource.one
+      const many = resource.many != null
+
       queries[name] = {
-        type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(resourceType))),
+        type: many
+        ? new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(resourceType)))
+        : new GraphQLNonNull(resourceType),
         args:
-         _.chain(resource.many.path)
+         _.chain(getter.path)
           .split('/')
           .filter((p) => p[0] === ':')
           .map((p) => ({
@@ -70,7 +75,7 @@ export function convert (config: IConfig): GraphQLSchema {
           }))
           .keyBy('name')
           .mapValues(omit('name')) // turn path parts into same format as args
-          .assign(resource.many.params)
+          .assign(getter.params)
           .mapValues(({ type, default: defaultValue, required }) => {
             let argType = toGraphQLType(astFromTypeName(type), types)
             if (argType != null && isNullableType(argType)) {
@@ -88,7 +93,7 @@ export function convert (config: IConfig): GraphQLSchema {
           })
           .value() as GraphQLFieldConfigArgumentMap,
         resolve: async (source, args, context) => {
-          const parts = resource.many.path.split('/')
+          const parts = getter.path.split('/')
           const filled = parts.map((part) => {
             if (part[0] === ':') {
               return args[part.substring(1)] // TODO: strip file extensions
@@ -99,7 +104,7 @@ export function convert (config: IConfig): GraphQLSchema {
 
           const query: {[key: string]: any} = {}
 
-          for (const [key, param] of Object.entries(resource.many.params)) {
+          for (const [key, param] of Object.entries(getter.params || {})) {
             if (param.required && param.default != null && args[key] == null) {
               throw new Error(`missing required param ${key}`)
             }
@@ -119,13 +124,20 @@ export function convert (config: IConfig): GraphQLSchema {
             })
             const data = JSON.parse(response.body)
             console.log(data)
-            if (!Array.isArray(data)) {
-              throw new Error('did not receive an array')
+            if (many) {
+              if (!Array.isArray(data)) {
+                throw new Error('did not receive an array')
+              }
+              return data.map((elem) => insertMetadata(elem, {
+                __args: args,
+                __parent: source
+              }))
+            } else {
+              return insertMetadata(data, {
+                __args: args,
+                __parent: source
+              })
             }
-            return data.map((elem) => insertMetadata(elem, {
-              __args: args,
-              __parent: source
-            }))
           } catch (e) {
             if ('response' in e) {
               const err: GotError = e
