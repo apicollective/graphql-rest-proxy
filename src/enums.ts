@@ -9,7 +9,7 @@ export function createEnums (types: Map<string, GraphQLType>, config: IConfig) {
       description: enm.description,
       values: _.chain(enm.values)
                .keyBy('name')
-               .mapKeys((value, key) => key.toUpperCase())
+               .mapKeys((value, key) => _.snakeCase(key).toUpperCase())
                .mapValues((enumValue) => ({
                  value: enumValue.name,
                  description: enumValue.description

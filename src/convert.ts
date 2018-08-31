@@ -34,6 +34,10 @@ import {
 } from './util'
 
 export function convert (config: IConfig): GraphQLSchema {
+  if (config.base_url == null) {
+    throw new Error('missing base_url')
+  }
+
   const types = new Map<string, GraphQLType>([
     ['boolean', GraphQLBoolean],
     ['date-iso8601', GraphQLDate],
@@ -63,10 +67,10 @@ export function convert (config: IConfig): GraphQLSchema {
       queries[name] = {
         type: many
         ? new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(resourceType)))
-        : new GraphQLNonNull(resourceType),
+        : new GraphQLNonNull(resourceType), // should this be nullable? handle 404s
         args:
          _.chain(getter.path)
-          .split('/')
+          .split(/[/.]/)
           .filter((p) => p[0] === ':')
           .map((p) => ({
             name: p.substring(1),
