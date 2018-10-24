@@ -1,0 +1,95 @@
+{
+  "name": "graphql-rest-proxy-config",
+  "enums": {
+    "location": {
+      "values": [
+        { "name": "args" },
+        { "name": "instance" }
+      ]
+    }
+  },
+  "models": {
+    "config": {
+      "fields": [
+        { "name": "base_url", "type": "string" },
+        { "name": "enums", "type": "map[enum]" },
+        { "name": "unions", "type": "map[union]" },
+        { "name": "models", "type": "map[model]" },
+        { "name": "resources", "type": "map[resource]" }
+      ]
+    },
+    "enum": {
+      "fields": [
+        { "name": "values", "type": "[enum_value]" }
+      ]
+    },
+    "enum_value": {
+      "fields": [
+        { "name": "name", "type": "string" },
+        { "name": "description", "type": "string", "required": false }
+      ]
+    },
+    "union": {
+      "fields": [
+        { "name": "description", "type": "string", "required": false },
+        { "name": "discriminator", "type": "string", "required": false },
+        { "name": "types", "type": "[union_type]" }
+      ]
+    },
+    "union_type": {
+      "fields": [
+        { "name": "name", "type": "string" }
+      ]
+    },
+    "model": {
+      "fields": [
+        { "name": "description", "type": "string", "required": false },
+        { "name": "fields", "type": "[model_field]" },
+        { "name": "links", "type": "[link]", "required": false }
+      ]
+    },
+    "model_field": {
+      "fields": [
+        { "name": "name", "type": "string" },
+        { "name": "type", "type": "string" },
+        { "name": "description", "type": "string", "required": false },
+        { "name": "required", "type": "boolean", "required": false },
+        { "name": "default", "type": "json", "required": false }
+      ]
+    },
+    "link": {
+      "fields": [
+        { "name": "name", "type": "string", "required": false },
+        { "name": "type", "type": "string", "required": false },
+        { "name": "params", "type": "[link_param]", "required": false }
+      ]
+    },
+    "link_param": {
+      "fields": [
+        { "name": "name", "type": "string" },
+        { "name": "location", "type": "location" },
+        { "name": "expression", "type": "string", "required": false },
+        { "name": "inherit", "type": "boolean", "required": false }
+      ]
+    },
+    "resource": {
+      "fields": [
+        { "name": "many", "type": "resource_desc", "required": false },
+        { "name": "one", "type": "resource_desc", "required": false }
+      ]
+    },
+    "resource_desc": {
+      "fields": [
+        { "name": "path", "type": "string" },
+        { "name": "params", "type": "map[param]" }
+      ]
+    },
+    "param": {
+      "fields": [
+        { "name": "type", "type": "string" },
+        { "name": "required", "type": "boolean", "required": false },
+        { "name": "default", "type": "json", "required": false }
+      ]
+    }
+  }
+}
