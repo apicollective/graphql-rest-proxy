@@ -46,4 +46,6 @@ export const GraphQLUnit = new GraphQLScalarType({
 })
 
 export { GraphQLDate, GraphQLDateTime } from 'graphql-iso-date'
-export { default as GraphQLJSON } from 'graphql-type-json'
+
+import GraphQLJSON from 'graphql-type-json'
+export { GraphQLJSON }
