@@ -2,6 +2,7 @@ import { ApolloServer } from 'apollo-server-express'
 import cors from 'cors'
 import express, { Request } from 'express'
 import fs from 'fs'
+import path from 'path'
 import { inspect } from 'util'
 import { convert } from './convert'
 import { mergeConfigs } from './merge'
@@ -23,6 +24,10 @@ console.log(inspect(config, true, 9999, true))
 const app = express()
 
 app.use(cors())
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'graphql-playground.html'))
+})
 
 app.get('/_internal_/healthcheck', (req, res) => {
   res.send({
