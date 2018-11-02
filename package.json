@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "apollo-server": "^2.1.0",
+    "apollo-server-express": "^2.1.0",
     "got": "^8.3.2",
     "graphql": "^14.0.2",
     "graphql-iso-date": "^3.6.1",

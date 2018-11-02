@@ -1,5 +1,5 @@
-import { ApolloServer } from 'apollo-server'
-import { Request } from 'express'
+import { ApolloServer } from 'apollo-server-express'
+import express, { Request } from 'express'
 import fs from 'fs'
 import { inspect } from 'util'
 import { convert } from './convert'
@@ -19,6 +19,14 @@ const config = configs
 console.log('Final config:')
 console.log(inspect(config, true, 9999, true))
 
+const app = express()
+
+app.get('/_internal_/healthcheck', (req, res) => {
+  res.send({
+    status: 'healthy'
+  })
+})
+
 const server = new ApolloServer({
   schema: convert(config),
   context: ({ req }: { req: Request }) => ({
@@ -27,6 +35,6 @@ const server = new ApolloServer({
   tracing: true
 })
 
-server.listen().then(({ url }) => {
-  console.log(`${url}`)
-})
+server.applyMiddleware({ app })
+
+app.listen(4000, () => console.log('http://localhost:4000'))
