@@ -25,10 +25,6 @@ const app = express()
 
 app.use(cors())
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'graphql-playground.html'))
-})
-
 app.get('/_internal_/healthcheck', (req, res) => {
   res.send({
     status: 'healthy'
@@ -44,6 +40,9 @@ const server = new ApolloServer({
   introspection: true
 })
 
-server.applyMiddleware({ app })
+server.applyMiddleware({
+  app,
+  path: '/'
+})
 
 app.listen(4000, () => console.log('http://localhost:4000'))
