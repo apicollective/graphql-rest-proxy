@@ -35,7 +35,8 @@ const server = new ApolloServer({
   context: ({ req }: { req: Request }) => ({
     authorization: req.headers.authorization
   }),
-  tracing: true
+  tracing: true,
+  introspection: true
 })
 
 server.applyMiddleware({ app })
