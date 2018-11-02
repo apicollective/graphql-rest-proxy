@@ -1,4 +1,5 @@
 import { ApolloServer } from 'apollo-server-express'
+import cors from 'cors'
 import express, { Request } from 'express'
 import fs from 'fs'
 import { inspect } from 'util'
@@ -20,6 +21,8 @@ console.log('Final config:')
 console.log(inspect(config, true, 9999, true))
 
 const app = express()
+
+app.use(cors())
 
 app.get('/_internal_/healthcheck', (req, res) => {
   res.send({
