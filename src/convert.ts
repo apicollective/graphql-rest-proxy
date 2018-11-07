@@ -161,7 +161,11 @@ export function convert (config: IConfig): GraphQLSchema {
                 throw new ApolloError(
                   data.messages[0], // api-build requires a messages[] field
                   data.code, // api-build requires a code field
-                  _.omit(data, 'code')
+                  {
+                    ...data,
+                    code: undefined,
+                    url: fullUrl
+                  }
                 )
               } else {
                 throw new ApolloError(err.response.body, undefined, {
