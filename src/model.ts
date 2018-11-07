@@ -225,10 +225,6 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
                   } else {
                     values = jsonpath.query(source, param.expression)
                   }
-                  if (values.length === 0) {
-                    throw new Error(`Model[${modelName}]: Link[${linkName}]: expression[${param.expression}] ` +
-                                    `returned nothing from the instance ${JSON.stringify(source)}`)
-                  }
                   if (values.length > 1) {
                     throw new Error(`Model[${modelName}]: Link[${linkName}]: expression[${param.expression}] ` +
                                     `returned more than one result from the instance ${JSON.stringify(source)}`)
