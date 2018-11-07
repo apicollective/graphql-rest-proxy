@@ -1,3 +1,4 @@
+import { ApolloError } from 'apollo-server-core'
 import got, { GotError } from 'got'
 import {
   GraphQLBoolean,
@@ -117,7 +118,8 @@ export function convert (config: IConfig): GraphQLSchema {
             }
           }
 
-          console.log(`GET ${config.base_url}${filled}?${Object.entries(query).map(([k, v]) => `${k}=${v}`).join('&')}`)
+          const fullUrl = `${config.base_url}${filled}?${Object.entries(query).map(([k, v]) => `${k}=${v}`).join('&')}`
+          console.log(`GET ${fullUrl}`)
 
           try {
             const response = await got(`${config.base_url}${filled}`, {
@@ -143,9 +145,29 @@ export function convert (config: IConfig): GraphQLSchema {
               })
             }
           } catch (e) {
+            const parseJson = (s: string) => {
+              try {
+                return JSON.parse(s)
+              } catch {
+                return undefined
+              }
+            }
+
+            console.log(e)
             if ('response' in e) {
               const err: GotError = e
-              throw new Error(err.response.body)
+              const data = parseJson(err.response.body)
+              if (data) {
+                throw new ApolloError(
+                  data.messages[0], // api-build requires a messages[] field
+                  data.code, // api-build requires a code field
+                  _.omit(data, 'code')
+                )
+              } else {
+                throw new ApolloError(err.response.body, undefined, {
+                  url: fullUrl
+                })
+              }
             } else {
               throw e
             }
