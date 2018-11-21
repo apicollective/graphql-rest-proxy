@@ -28,7 +28,9 @@ export function searchArgs (obj: any | undefined, key: string): any {
 }
 
 export function insertMetadata (obj: any, data: object): any {
-  if (Array.isArray(obj)) {
+  if (obj == null) {
+    return obj
+  } else if (Array.isArray(obj)) {
     return obj.map((elem) => insertMetadata(elem, data))
   } else if (typeof obj === 'object') {
     const transformed = Object.keys(obj).reduce((newobj, key) => {
