@@ -19,7 +19,8 @@ import {
   insertMetadata,
   isEnclosingType,
   searchArgs,
-  toGraphQLType
+  toGraphQLType,
+  makeError
 } from './util'
 
 class ValidationError extends Error {
@@ -256,7 +257,8 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
             }
 
             // tslint:disable-next-line:max-line-length
-            console.log(`GET ${config.base_url}${filled}?${Object.entries(query).map(([k, v]) => `${k}=${v}`).join('&')}`)
+            const fullUrl = `${config.base_url}${filled}?${Object.entries(query).map(([k, v]) => `${k}=${v}`).join('&')}`
+            console.log(`GET ${fullUrl}`)
 
             try {
               const response = await got(`${config.base_url}${filled}`, {
@@ -266,7 +268,9 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
                 }
               })
               const data = JSON.parse(response.body)
-              console.log(data)
+              if (process.env.NODE_ENV !== 'production') {
+                console.log(data) // data is potentially sensitive
+              }
               if (!Array.isArray(data)) {
                 throw new Error('did not receive an array')
               }
@@ -285,12 +289,7 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
                 })
               }
             } catch (e) {
-              if ('response' in e) {
-                const err: GotError = e
-                throw new Error(err.response.body)
-              } else {
-                throw e
-              }
+              throw makeError(e, fullUrl)
             }
           }
         }

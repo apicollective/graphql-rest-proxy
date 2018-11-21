@@ -31,7 +31,8 @@ import {
   GraphQLUnit,
   IConfig,
   insertMetadata,
-  toGraphQLType
+  toGraphQLType,
+  makeError
 } from './util'
 
 export function convert (config: IConfig): GraphQLSchema {
@@ -129,7 +130,9 @@ export function convert (config: IConfig): GraphQLSchema {
               }
             })
             const data = JSON.parse(response.body)
-            console.log(data)
+            if (process.env.NODE_ENV !== 'production') {
+              console.log(data) // data is potentially sensitive
+            }
             if (many) {
               if (!Array.isArray(data)) {
                 throw new Error('did not receive an array')
@@ -145,36 +148,7 @@ export function convert (config: IConfig): GraphQLSchema {
               })
             }
           } catch (e) {
-            const parseJson = (s: string) => {
-              try {
-                return JSON.parse(s)
-              } catch {
-                return undefined
-              }
-            }
-
-            console.log(e)
-            if ('response' in e) {
-              const err: GotError = e
-              const data = parseJson(err.response.body)
-              if (data) {
-                throw new ApolloError(
-                  data.messages[0], // api-build requires a messages[] field
-                  data.code, // api-build requires a code field
-                  {
-                    ...data,
-                    code: undefined,
-                    url: fullUrl
-                  }
-                )
-              } else {
-                throw new ApolloError(err.response.body, undefined, {
-                  url: fullUrl
-                })
-              }
-            } else {
-              throw e
-            }
+            throw makeError(e, fullUrl)
           }
         }
       }

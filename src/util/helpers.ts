@@ -14,6 +14,8 @@ import {
 } from 'graphql'
 import { camelCase, upperFirst } from 'lodash'
 import { AstNode } from './ast'
+import { GotError } from 'got';
+import { ApolloError } from 'apollo-server-core';
 
 export function searchArgs (obj: any | undefined, key: string): any {
   if (obj === undefined) {
@@ -105,5 +107,39 @@ export function toGraphQLType (node: AstNode, types: Map<string, GraphQLType>): 
     default: {
       return types.get(node.name)
     }
+  }
+}
+
+export function makeError (e: any, fullUrl: string) {
+  if ('response' in e) {
+    const err: GotError = e
+    try {
+      // a full flow error
+      const data = JSON.parse(err.response.body)
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(data)
+      }
+
+      return new ApolloError(
+        data.messages[0], // api-build requires a messages[] field
+        data.code, // api-build requires a code field
+        {
+          ...data,
+          code: undefined,
+          url: fullUrl
+        }
+      )
+    } catch {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(err.response.body)
+      }
+      // some other error from the web service, and not JSON
+      return new ApolloError(err.response.body, undefined, {
+        url: fullUrl
+      })
+    }
+  } else {
+    // not an error returned by got(), e.g. 4xx or 5xx
+    return e
   }
 }
