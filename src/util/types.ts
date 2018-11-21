@@ -34,7 +34,7 @@ interface ILink {
   params: IParam[]
 }
 
-type Location = 'instance' | 'args'
+export type Location = 'instance' | 'args'
 
 interface IParam {
   name: string

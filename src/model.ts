@@ -18,6 +18,7 @@ import {
   IConfig,
   insertMetadata,
   isEnclosingType,
+  Location,
   searchArgs,
   toGraphQLType,
   makeError
@@ -160,18 +161,48 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
           throw new ValidationError(`${link.type} is not a GraphQLOutputType`).model(modelName).link(linkName)
         }
 
-        if (config.resources[getBaseTypeName(link.type)] == null) {
+        const resource = config.resources[getBaseTypeName(link.type)]
+
+        if (resource == null) {
           throw new ValidationError(`no such resource`).model(modelName).link(linkName)
         }
 
-        // convert strings to { type, source }
-        const params = link.params.map((param) => ({
+        interface IParamDesc {
+          name: string
+          location: Location
+          inherit: boolean
+          type: string
+          expression?: string
+          default?: any
+          required: boolean
+        }
+
+        // params specified in link
+        const explicitParams: IParamDesc[] = link.params.map((param) => ({
           name: param.name,
           location: param.location,
           inherit: param.inherit || false,
           type: param.type || 'string',
-          expression: param.expression || `$['${param.name}']`
+          expression: param.expression,
+          required: true
         }))
+
+        // rest of the params for fetching the resource
+        const extraParams: IParamDesc[] = Object.entries(resource.many.params || {})
+          .filter(([key, param]) => explicitParams.find(({ name }) => name === key) == null)
+          .map(([key, param]) => {
+            return {
+              name: key,
+              location: 'args' as Location,
+              inherit: false,
+              type: param.type,
+              required: param.required,
+              default: param.default
+            }
+          })
+
+        const params = explicitParams.concat(extraParams)
+        console.log(`explicit: ${explicitParams.map(x => x.name)}\nextra: ${extraParams.map(x => x.name)}`)
 
         for (const { name, location } of params) {
           if (location !== 'instance' && location !== 'args') {
@@ -195,8 +226,6 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
                  })
                  .value() as GraphQLFieldConfigArgumentMap,
           resolve: async (source, args, context) => {
-            const resource = config.resources[getBaseTypeName(link.type)]
-
             function getArg (key: string) {
               const param = params.find(({ name }) => name === key)
               if (param == null) {
@@ -224,11 +253,15 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
                     // ???
                     throw new Error(`not implemented yet`)
                   } else {
+                    if (param.expression == null) {
+                      throw new Error(`Model[${modelName}]: Link[${linkName}]: Param[${key}]: missing expression`)
+                    }
                     values = jsonpath.query(source, param.expression)
                   }
                   if (values.length > 1) {
-                    throw new Error(`Model[${modelName}]: Link[${linkName}]: expression[${param.expression}] ` +
-                                    `returned more than one result from the instance ${JSON.stringify(source)}`)
+                    throw new Error(`Model[${modelName}]: Link[${linkName}]: Param[${key}]:` +
+                      `expression[${param.expression}] returned more than one result` +
+                      `from the instance ${JSON.stringify(source)}`)
                   }
                   return values[0]
                 }
@@ -247,7 +280,9 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
             const query: {[key: string]: any} = {}
 
             for (const [key, param] of Object.entries(resource.many.params || {})) {
-              if (params.find(({ name }) => name === key) != null) { // if we know how to get it
+              if (args[key]) {
+                query[key] = args[key]
+              } else if (explicitParams.find(({ name }) => name === key) != null) { // if we know how to get it
                 query[key] = getArg(key)
               } else if (param.required && param.default != null) { // if required and have default
                 query[key] = param.default
