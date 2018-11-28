@@ -1,5 +1,4 @@
-import { ApolloError } from 'apollo-server-core'
-import got, { GotError } from 'got'
+import got from 'got'
 import {
   GraphQLBoolean,
   GraphQLFieldConfigArgumentMap,
@@ -31,8 +30,9 @@ import {
   GraphQLUnit,
   IConfig,
   insertMetadata,
-  toGraphQLType,
-  makeError
+  makeError,
+  parseDefault,
+  toGraphQLType
 } from './util'
 
 export function convert (config: IConfig): GraphQLSchema {
@@ -91,7 +91,7 @@ export function convert (config: IConfig): GraphQLSchema {
 
               return {
                 type: argType,
-                defaultValue
+                defaultValue: parseDefault(type, defaultValue)
               }
             } else {
               throw new Error(`no such nullable type ${type}`)

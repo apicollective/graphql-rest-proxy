@@ -19,9 +19,10 @@ import {
   insertMetadata,
   isEnclosingType,
   Location,
+  makeError,
+  parseDefault,
   searchArgs,
-  toGraphQLType,
-  makeError
+  toGraphQLType
 } from './util'
 
 class ValidationError extends Error {
@@ -202,7 +203,6 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
           })
 
         const params = explicitParams.concat(extraParams)
-        console.log(`explicit: ${explicitParams.map(x => x.name)}\nextra: ${extraParams.map(x => x.name)}`)
 
         for (const { name, location } of params) {
           if (location !== 'instance' && location !== 'args') {
@@ -215,10 +215,13 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
           args: _.chain(params)
                  .filter({ location: 'args', inherit: false })
                  .keyBy('name')
-                 .mapValues(({ type }, name) => {
+                 .mapValues(({ type, default: defaultValue }, name) => {
                    const argType = toGraphQLType(astFromTypeName(type), types)
                    if (argType != null && isInputType(argType)) {
-                     return { type: argType } // create the arg object
+                     return {
+                       type: argType,
+                       defaultValue: parseDefault(type, defaultValue)
+                     }
                    } else {
                      throw new ValidationError(`Arg[${name}]: no such type '${type}'`)
                               .model(modelName).link(linkName)

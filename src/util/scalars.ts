@@ -1,6 +1,6 @@
 import { GraphQLScalarType, Kind } from 'graphql'
 
-function checkLong (value: any) {
+function checkLong (value: number) {
   if (typeof value !== 'number') throw new TypeError(`${value} is not a number`)
   if (!Number.isInteger(value)) throw new TypeError(`${value} is not a long`)
   return value

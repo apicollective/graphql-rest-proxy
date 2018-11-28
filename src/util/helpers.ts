@@ -1,4 +1,6 @@
+import { ApolloError } from 'apollo-server-core'
 import assert from 'assert'
+import { GotError } from 'got'
 import {
   GraphQLList,
   GraphQLNonNull,
@@ -14,8 +16,6 @@ import {
 } from 'graphql'
 import { camelCase, upperFirst } from 'lodash'
 import { AstNode } from './ast'
-import { GotError } from 'got';
-import { ApolloError } from 'apollo-server-core';
 
 export function searchArgs (obj: any | undefined, key: string): any {
   if (obj === undefined) {
@@ -141,5 +141,19 @@ export function makeError (e: any, fullUrl: string) {
   } else {
     // not an error returned by got(), e.g. 4xx or 5xx
     return e
+  }
+}
+
+export function parseDefault (type: string, defaultValue: any) {
+  if (defaultValue == null) {
+    return undefined
+  }
+
+  if (type === 'integer' || type === 'long') {
+    return parseInt(defaultValue, 10)
+  } else if (type === 'double') {
+    return parseFloat(defaultValue)
+  } else {
+    return defaultValue
   }
 }
