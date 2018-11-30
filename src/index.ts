@@ -37,7 +37,8 @@ const server = new ApolloServer({
     authorization: req.headers.authorization
   }),
   tracing: true,
-  introspection: true
+  introspection: true,
+  playground: true
 })
 
 server.applyMiddleware({
