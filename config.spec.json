@@ -81,6 +81,7 @@
     "resource_desc": {
       "fields": [
         { "name": "path", "type": "string" },
+        { "name": "extract", "type": "string", "required": false },
         { "name": "params", "type": "map[param]" }
       ]
     },

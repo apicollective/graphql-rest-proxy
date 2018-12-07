@@ -15,6 +15,7 @@ import {
   isNullableType,
   isOutputType
 } from 'graphql'
+import jsonpath from 'jsonpath'
 import _ from 'lodash'
 import { omit } from 'lodash/fp'
 import { createEnums } from './enums'
@@ -129,10 +130,22 @@ export function convert (config: IConfig): GraphQLSchema {
                 authorization: context.authorization
               }
             })
-            const data = JSON.parse(response.body)
+            let data = JSON.parse(response.body)
             if (process.env.NODE_ENV !== 'production') {
               console.log(data) // data is potentially sensitive
             }
+            if (getter.extract != null) {
+              const results = jsonpath.query(data, getter.extract)
+              if (results.length === 0) {
+                throw new Error(`tried to extract ${getter.extract} from data, but did not match anything`)
+              } else if (results.length > 1) {
+                throw new Error(`tried to extract ${getter.extract} from data, ` +
+                                `but matched more than 1 item - ${results}`)
+              } else {
+                data = results[0]
+              }
+            }
+
             if (many) {
               if (!Array.isArray(data)) {
                 throw new Error('did not receive an array')

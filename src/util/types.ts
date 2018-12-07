@@ -67,6 +67,7 @@ interface IResource {
 
 interface IGetter {
   path: string
+  extract?: string
   params?: {
     [key: string]: {
       type: string
