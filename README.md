@@ -42,19 +42,19 @@ Define your resources:
 ```
 
 ### Valid Types
-| Type string       | GraphQL Type | Source                                                               |
-| ----------------- | ------------ | -------------------------------------------------------------------- |
-| boolean           | Boolean      | Built-in                                                             |
-| date              | Date         | [graphql-iso-date](https://www.npmjs.com/package/graphql-iso-date)   |
-| date-time-iso8601 | DateTime     | [graphql-iso-date](https://www.npmjs.com/package/graphql-iso-date)   |
-| double            | Float        | Built-in                                                             |
-| integer           | Int          | Built-in                                                             |
-| json              | JSON         | [graphql-type-json](https://www.npmjs.com/package/graphql-type-json) |
-| long              | Long         | [Custom](src/util/scalars.ts#L9)                                     |
-| string            | String       | Built-in                                                             |
-| object            | Object       | [Custom](src/util/scalars.ts#L27)                                    |
-| unit              | Unit         | [Custom](src/util/scalars.ts#L38)                                    |
-| uuid              | ID           | Built-in                                                             |
+| Type string       | GraphQL Type                                               |
+| ----------------- | ---------------------------------------------------------- |
+| boolean           | Boolean                                                    |
+| date              | [Date](https://www.npmjs.com/package/graphql-iso-date)     |
+| date-time-iso8601 | [DateTime](https://www.npmjs.com/package/graphql-iso-date) |
+| double            | Float                                                      |
+| integer           | Int                                                        |
+| json              | [JSON](https://www.npmjs.com/package/graphql-type-json)    |
+| long              | [Long](src/util/scalars.ts#L9)                             |
+| string            | String                                                     |
+| object            | [Object](src/util/scalars.ts#L27)                          |
+| unit              | [Unit](src/util/scalars.ts#L38)                            |
+| uuid              | ID                                                         |
 
 ## Authentication
 The only currently supported method of API authentication is by proxying the `Authorization` HTTP header from the GraphQL server to the REST backend. This is automatically done on every request.
