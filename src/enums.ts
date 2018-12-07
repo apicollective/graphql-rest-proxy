@@ -3,7 +3,7 @@ import _ from 'lodash'
 import { IConfig } from './util/types'
 
 export function createEnums (types: Map<string, GraphQLType>, config: IConfig) {
-  for (const [name, enm] of Object.entries(config.enums)) {
+  for (const [name, enm] of Object.entries(config.enums || {})) {
     types.set(name, new GraphQLEnumType({
       name,
       description: enm.description,

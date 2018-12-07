@@ -61,7 +61,7 @@ export function convert (config: IConfig): GraphQLSchema {
 
   // create queries
   const queries: GraphQLFieldConfigMap<any, any> = {}
-  for (const [name, resource] of Object.entries(config.resources)) {
+  for (const [name, resource] of Object.entries(config.resources || {})) {
     const resourceType = types.get(name)
     if (resourceType && isOutputType(resourceType)) {
       const getter = resource.many || resource.one

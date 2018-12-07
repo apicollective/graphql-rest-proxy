@@ -80,7 +80,7 @@ class ValidationError extends Error {
 }
 
 function createModel (types: Map<string, GraphQLType>, modelName: string, config: IConfig): GraphQLObjectType {
-  const model = config.models[modelName]
+  const model = config.models![modelName]
 
   return new GraphQLObjectType({
     name: modelName,
@@ -160,6 +160,10 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
 
         if (!isOutputType(linkType)) {
           throw new ValidationError(`${link.type} is not a GraphQLOutputType`).model(modelName).link(linkName)
+        }
+
+        if (config.resources == null) {
+          throw new Error('no resources defined')
         }
 
         const resource = config.resources[getBaseTypeName(link.type)]
@@ -340,7 +344,7 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
 }
 
 export function createModels (types: Map<string, GraphQLType>, config: IConfig) {
-  for (const name of Object.keys(config.models)) {
+  for (const name of Object.keys(config.models || {})) {
     types.set(name, createModel(types, name, config))
   }
 }

@@ -1,15 +1,15 @@
 export interface IConfig {
   base_url: string
-  models: {
+  models?: {
     [key: string]: IModel
   }
-  enums: {
+  enums?: {
     [key: string]: IEnum
   }
-  unions: {
+  unions?: {
     [key: string]: IUnion
   }
-  resources: {
+  resources?: {
     [key: string]: IResource
   }
 }

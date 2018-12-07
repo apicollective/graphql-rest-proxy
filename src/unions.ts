@@ -2,7 +2,7 @@ import { GraphQLType, GraphQLUnionType, isObjectType } from 'graphql'
 import { IConfig } from './util'
 
 export function createUnions (types: Map<string, GraphQLType>, config: IConfig) {
-  for (const [name, union] of Object.entries(config.unions)) {
+  for (const [name, union] of Object.entries(config.unions || {})) {
     types.set(name, new GraphQLUnionType({
       name,
       types: () => union.types.map(({ name: type }) => {
