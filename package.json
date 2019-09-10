@@ -15,8 +15,8 @@
     "graphql": "^14.0.2",
     "graphql-iso-date": "^3.6.1",
     "graphql-type-json": "^0.2.1",
-    "jsonpath": "^1.0.0",
-    "lodash": "^4.17.11"
+    "jsonpath": "^1.0.2",
+    "lodash": "^4.17.15"
   },
   "devDependencies": {
     "@types/got": "^9.2.1",
