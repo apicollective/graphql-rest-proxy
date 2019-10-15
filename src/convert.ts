@@ -118,7 +118,7 @@ export function convert (config: IConfig): GraphQLSchema {
             if (Array.isArray(args[key])) {
               for (const value of args[key]) {
                 if (value != null) {
-                  if (query !== '' {
+                  if (query !== '') {
                     query += '&'
                   }
                   query += `${key}=${value}` // TODO: Escape
