@@ -109,7 +109,7 @@ export function convert (config: IConfig): GraphQLSchema {
             }
           }).join('/')
 
-          let query = ""
+          let query = ''
 
           for (const [key, param] of Object.entries(getter.params || {})) {
             if (param.required && param.default != null && args[key] == null) {
@@ -118,22 +118,22 @@ export function convert (config: IConfig): GraphQLSchema {
             if (Array.isArray(args[key])) {
               for (const value of args[key]) {
                 if (value != null) {
-                  if (query !== "") {
-                    query += "&"
+                  if (query !== '' {
+                    query += '&'
                   }
                   query += `${key}=${value}` // TODO: Escape
                 }
               }
             } else if (args[key] != null) {
-              if (query !== "") {
-                query += "&"
+              if (query !== '') {
+                query += '&'
               }
               query += `${key}=${args[key]}` // TODO: Escape
             }
           }
 
           let fullUrl = `${config.base_url}${filled}`
-          if (query !== "") {
+          if (query !== '') {
             fullUrl += `?${query}`
           }
           console.log(`GET ${fullUrl}`)
