@@ -109,18 +109,33 @@ export function convert (config: IConfig): GraphQLSchema {
             }
           }).join('/')
 
-          const query: {[key: string]: any} = {}
+          let query = ''
 
           for (const [key, param] of Object.entries(getter.params || {})) {
             if (param.required && param.default != null && args[key] == null) {
               throw new Error(`missing required param ${key}`)
             }
-            if (args[key] != null) { // needed?
-              query[key] = args[key]
+            if (Array.isArray(args[key])) {
+              for (const value of args[key]) {
+                if (value != null) {
+                  if (query !== '') {
+                    query += '&'
+                  }
+                  query += `${key}=${value}` // TODO: Escape
+                }
+              }
+            } else if (args[key] != null) {
+              if (query !== '') {
+                query += '&'
+              }
+              query += `${key}=${args[key]}` // TODO: Escape
             }
           }
 
-          const fullUrl = `${config.base_url}${filled}?${Object.entries(query).map(([k, v]) => `${k}=${v}`).join('&')}`
+          let fullUrl = `${config.base_url}${filled}`
+          if (query !== '') {
+            fullUrl += `?${query}`
+          }
           console.log(`GET ${fullUrl}`)
 
           try {
