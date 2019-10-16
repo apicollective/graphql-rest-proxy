@@ -117,23 +117,26 @@ export function convert (config: IConfig): GraphQLSchema {
               throw new Error(`missing required param ${key}`)
             }
             if (args[key] != null) { // needed?
-              query[key] = args[key]
+              if (!parts.includes(`:${key}`)) {
+                query[key] = args[key]
+              }
             }
           }
 
-          const fullUrl = `${config.base_url}${filled}?${querystring.stringify(query)}`
-          console.log(`GET ${fullUrl}`)
+          const url = `${config.base_url}${filled}`
+          const fullquery = querystring.stringify(query)
+          console.log(`GET ${url}?${fullquery}`)
 
           try {
-            const response = await got(`${config.base_url}${filled}`, {
-              query,
+            const response = await got(url, {
+              query: fullquery,
               headers: {
                 authorization: context.authorization
               }
             })
             let data = JSON.parse(response.body)
             if (process.env.NODE_ENV !== 'production') {
-              console.log(data) // data is potentially sensitive
+              console.log('=>', data) // data is potentially sensitive
             }
             if (getter.extract != null) {
               const results = jsonpath.query(data, getter.extract)
@@ -162,7 +165,7 @@ export function convert (config: IConfig): GraphQLSchema {
               })
             }
           } catch (e) {
-            throw makeError(e, fullUrl)
+            throw makeError(e, `${url}?${fullquery}`)
           }
         }
       }
