@@ -18,6 +18,7 @@ import {
 import jsonpath from 'jsonpath'
 import _ from 'lodash'
 import { omit } from 'lodash/fp'
+import querystring from 'querystring'
 import { createEnums } from './enums'
 import { createModels } from './model'
 import { createUnions } from './unions'
@@ -120,7 +121,7 @@ export function convert (config: IConfig): GraphQLSchema {
             }
           }
 
-          const fullUrl = `${config.base_url}${filled}?${Object.entries(query).map(([k, v]) => `${k}=${v}`).join('&')}`
+          const fullUrl = `${config.base_url}${filled}?${querystring.stringify(query)}`
           console.log(`GET ${fullUrl}`)
 
           try {
