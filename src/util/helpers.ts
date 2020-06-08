@@ -134,7 +134,7 @@ export function makeError (e: any, fullUrl: string) {
         console.log(err.response.body)
       }
       // some other error from the web service, and not JSON
-      return new ApolloError(err.response.body, undefined, {
+      return new ApolloError(err.response.body, err.response.statusCode, {
         url: fullUrl
       })
     }
