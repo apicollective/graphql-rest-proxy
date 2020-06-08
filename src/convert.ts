@@ -18,7 +18,7 @@ import {
 import jsonpath from 'jsonpath'
 import _ from 'lodash'
 import { omit } from 'lodash/fp'
-import querystring from 'querystring'
+import { URLSearchParams } from 'url'
 import { createEnums } from './enums'
 import { createModels } from './model'
 import { createUnions } from './unions'
@@ -110,7 +110,7 @@ export function convert (config: IConfig): GraphQLSchema {
             }
           }).join('/')
 
-          const query: {[key: string]: any} = {}
+          const query = new URLSearchParams()
 
           for (const [key, param] of Object.entries(getter.params || {})) {
             if (param.required && param.default != null && args[key] == null) {
@@ -118,18 +118,23 @@ export function convert (config: IConfig): GraphQLSchema {
             }
             if (args[key] != null) { // needed?
               if (!parts.includes(`:${key}`)) {
-                query[key] = args[key]
+                if (Array.isArray(args[key])) {
+                  for (const value of args[key]) {
+                    query.append(key, value)
+                  }
+                } else {
+                  query.append(key, args[key])
+                }
               }
             }
           }
 
           const url = `${config.base_url}${filled}`
-          const fullquery = querystring.stringify(query)
-          console.log(`GET ${url}?${fullquery}`)
+          console.log(`GET ${url}?${query}`)
 
           try {
             const response = await got(url, {
-              query: fullquery,
+              searchParams: query,
               headers: {
                 authorization: context.authorization
               }
@@ -165,7 +170,7 @@ export function convert (config: IConfig): GraphQLSchema {
               })
             }
           } catch (e) {
-            throw makeError(e, `${url}?${fullquery}`)
+            throw makeError(e, `${url}?${query}`)
           }
         }
       }

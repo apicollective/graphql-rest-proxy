@@ -1,6 +1,6 @@
 import { ApolloError } from 'apollo-server-core'
 import assert from 'assert'
-import { GotError } from 'got'
+import { HTTPError } from 'got'
 import {
   GraphQLList,
   GraphQLNonNull,
@@ -110,12 +110,12 @@ export function toGraphQLType (node: AstNode, types: Map<string, GraphQLType>): 
   }
 }
 
-export function makeError (e: any, fullUrl: string) {
-  if ('response' in e) {
-    const err: GotError = e
+export function makeError (err: any, fullUrl: string) {
+  if (err instanceof HTTPError) {
+    const body = err.response.rawBody.toString()
     try {
       // a full flow error
-      const data = JSON.parse(err.response.body)
+      const data = JSON.parse(body)
       if (process.env.NODE_ENV !== 'production') {
         console.log(data)
       }
@@ -131,16 +131,16 @@ export function makeError (e: any, fullUrl: string) {
       )
     } catch {
       if (process.env.NODE_ENV !== 'production') {
-        console.log(err.response.body)
+        console.log(body)
       }
       // some other error from the web service, and not JSON
-      return new ApolloError(err.response.body, err.response.statusCode, {
+      return new ApolloError(body, err.response.statusCode.toString(), {
         url: fullUrl
       })
     }
   } else {
     // not an error returned by got(), e.g. 4xx or 5xx
-    return e
+    return err
   }
 }
 

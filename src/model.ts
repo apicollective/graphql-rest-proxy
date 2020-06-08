@@ -1,5 +1,5 @@
 import assert from 'assert'
-import got, { GotError } from 'got'
+import got from 'got'
 import {
   GraphQLFieldConfigArgumentMap,
   GraphQLFieldConfigMap,
@@ -11,6 +11,7 @@ import {
 } from 'graphql'
 import jsonpath from 'jsonpath'
 import _ from 'lodash'
+import { URLSearchParams } from 'url'
 import {
   astFromTypeName,
   AstNode,
@@ -284,27 +285,27 @@ function createModel (types: Map<string, GraphQLType>, modelName: string, config
               }
             }).join('/')
 
-            const query: {[key: string]: any} = {}
+            const query = new URLSearchParams()
 
             for (const [key, param] of Object.entries(resource.many.params || {})) {
               if (args[key]) {
-                query[key] = args[key]
+                query.append(key, args[key])
               } else if (explicitParams.find(({ name }) => name === key) != null) { // if we know how to get it
-                query[key] = getArg(key)
+                query.append(key, getArg(key))
               } else if (param.required && param.default != null) { // if required and have default
-                query[key] = param.default
+                query.append(key, param.default)
               } else if (param.required) { // required and not supplied
                 throw new Error(`Model[${modelName}]: Link[${linkName}]: missing required param ${key}`)
               }
             }
 
             // tslint:disable-next-line:max-line-length
-            const fullUrl = `${config.base_url}${filled}?${Object.entries(query).map(([k, v]) => `${k}=${v}`).join('&')}`
+            const fullUrl = `${config.base_url}${filled}?${query}`
             console.log(`GET ${fullUrl}`)
 
             try {
               const response = await got(`${config.base_url}${filled}`, {
-                query,
+                searchParams: query,
                 headers: {
                   authorization: context.authorization
                 }
