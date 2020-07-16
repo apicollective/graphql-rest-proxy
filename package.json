@@ -16,7 +16,7 @@
     "graphql-iso-date": "^3.6.1",
     "graphql-type-json": "^0.2.4",
     "jsonpath": "^1.0.2",
-    "lodash": "^4.17.15"
+    "lodash": "^4.17.19"
   },
   "devDependencies": {
     "@types/express-serve-static-core": "^4.17.7",
